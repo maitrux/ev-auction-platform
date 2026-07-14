@@ -1,20 +1,28 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from './create-prisma-client';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit {
-  constructor() {
-    const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL!,
-    });
+export class PrismaService implements OnModuleInit {
+  private readonly client: PrismaClient = createPrismaClient();
 
-    super({
-      adapter,
-    });
+  async onModuleInit(): Promise<void> {
+    await this.client.$connect();
   }
 
-  async onModuleInit() {
-    await this.$connect();
+  get user(): PrismaClient['user'] {
+    return this.client.user;
+  }
+
+  get vehicle(): PrismaClient['vehicle'] {
+    return this.client.vehicle;
+  }
+
+  get auction(): PrismaClient['auction'] {
+    return this.client.auction;
+  }
+
+  get bid(): PrismaClient['bid'] {
+    return this.client.bid;
   }
 }
