@@ -1,11 +1,5 @@
 import { jwtVerify } from "jose";
-import type { UserRole } from "@/types/user";
-
-export interface JwtPayload {
-  sub: string;
-  email: string;
-  role: UserRole;
-}
+import type { JwtPayload } from "@/types/auth";
 
 export async function verifyAccessToken(
   token: string | undefined,

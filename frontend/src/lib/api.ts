@@ -1,6 +1,11 @@
+import type { AuthenticatedUser, LoginResponse } from "@/types";
+
 const API_URL = "/api";
 
-export async function login(email: string, password: string) {
+export async function login(
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
@@ -20,7 +25,7 @@ export async function login(email: string, password: string) {
   return response.json();
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<AuthenticatedUser> {
   const response = await fetch(`${API_URL}/users/me`, {
     credentials: "include",
   });

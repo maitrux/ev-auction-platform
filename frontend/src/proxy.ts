@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import type { UserRole } from "@/types/user";
+import type { UserRole } from "@/types";
 
 const ROUTE_ROLES: Record<string, UserRole> = {
   "/admin": "ADMIN",

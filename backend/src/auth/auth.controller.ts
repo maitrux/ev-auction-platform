@@ -1,11 +1,8 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import express from 'express';
+import { loginSchema } from '../common/schemas/auth.schema';
+import { parseSchema } from '../common/utils/parse-schema';
 import { AuthService } from './auth.service';
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
 
 @Controller('auth')
 export class AuthController {
@@ -13,10 +10,11 @@ export class AuthController {
 
   @Post('login')
   async login(
-    @Body() body: LoginRequest,
+    @Body() body: unknown,
     @Res({ passthrough: true }) response: express.Response,
   ) {
-    const result = await this.authService.login(body.email, body.password);
+    const { email, password } = parseSchema(loginSchema, body);
+    const result = await this.authService.login(email, password);
 
     response.cookie('access_token', result.accessToken, {
       httpOnly: true,

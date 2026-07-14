@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { type PublicUser } from '../common/schemas/user.schema';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,7 +10,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string; user: PublicUser }> {
     const user = await this.prisma.user.findUnique({
       where: {
         email,
