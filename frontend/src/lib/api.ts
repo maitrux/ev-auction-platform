@@ -1,4 +1,4 @@
-import type { AuthenticatedUser, LoginResponse } from "@/types";
+import type { LoginResponse } from "@/types";
 
 const API_URL = "/api";
 
@@ -25,14 +25,13 @@ export async function login(
   return response.json();
 }
 
-export async function getCurrentUser(): Promise<AuthenticatedUser> {
-  const response = await fetch(`${API_URL}/users/me`, {
+export async function logout(): Promise<void> {
+  const response = await fetch(`${API_URL}/auth/logout`, {
+    method: "POST",
     credentials: "include",
   });
 
   if (!response.ok) {
-    throw new Error("Not authenticated");
+    throw new Error("Logout failed");
   }
-
-  return response.json();
 }

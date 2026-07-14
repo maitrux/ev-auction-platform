@@ -1,4 +1,4 @@
-import type { AuthenticatedUser, User, UserRole } from "./user";
+import type { User, UserRole } from "./user";
 
 export interface JwtPayload {
   sub: string;
@@ -10,4 +10,4 @@ export interface LoginResponse {
   user: User;
 }
 
-export type { AuthenticatedUser, User, UserRole };
+export type { User, UserRole };

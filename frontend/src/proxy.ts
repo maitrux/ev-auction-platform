@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { clearAccessTokenCookie } from "@/lib/auth-cookie";
 import type { UserRole } from "@/types";
 
 const ROUTE_ROLES: Record<string, UserRole> = {
@@ -22,7 +23,9 @@ export async function proxy(request: NextRequest) {
   const session = token ? await verifyAccessToken(token) : null;
 
   if (session?.role !== requiredRole) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const response = NextResponse.redirect(new URL("/", request.url));
+    clearAccessTokenCookie(response);
+    return response;
   }
 
   return NextResponse.next();
