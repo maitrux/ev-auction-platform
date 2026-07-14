@@ -1,5 +1,4 @@
 import type { User, UserRole } from "./user";
-
 export interface JwtPayload {
   sub: string;
   email: string;

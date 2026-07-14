@@ -15,22 +15,34 @@ model User {
   bids         Bid[]
 }
 
+enum VehicleCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+}
+
 model Vehicle {
-  id               String    @id @default(uuid())
-  vin              String    @unique
-  make             String
-  model            String
-  year             Int
-  mileage          Int
-  batteryCapacity  Float
-  batterySoH       Float
-  range            Int
-  registrationDate DateTime
-  conditionNotes   String?
-  photos           String[]
-  city             String
-  country          String
-  auctions         Auction[]
+  id                    String            @id @default(uuid())
+  vin                   String            @unique
+  make                  String
+  model                 String
+  year                  Int
+  mileage               Int
+  batteryCapacityKwh    Float
+  batterySoH            Float
+  rangeKm               Int
+  registrationDate      DateTime
+  condition             VehicleCondition
+  conditionNotes        String?
+  photos                String[]
+  city                  String
+  country               String
+
+  auctions              Auction[]
+
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 }
 
 model Auction {
