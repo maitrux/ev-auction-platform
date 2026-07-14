@@ -1,13 +1,12 @@
-import { User } from "@/types/user";
+const API_URL = "/api";
 
-const API_URL = "http://localhost:3001";
-
-export async function login(email: string, password: string): Promise<User> {
+export async function login(email: string, password: string) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify({
       email,
       password,
@@ -16,6 +15,18 @@ export async function login(email: string, password: string): Promise<User> {
 
   if (!response.ok) {
     throw new Error("Invalid credentials");
+  }
+
+  return response.json();
+}
+
+export async function getCurrentUser() {
+  const response = await fetch(`${API_URL}/users/me`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Not authenticated");
   }
 
   return response.json();

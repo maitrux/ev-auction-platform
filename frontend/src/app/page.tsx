@@ -17,11 +17,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const user = await login(email, password);
+      const res = await login(email, password);
 
-      if (user.role === "ADMIN") {
+      console.log("Logged in user:", res);
+
+      if (res.user.role === "ADMIN") {
         router.push("/admin");
-      } else if (user.role === "DEALER") {
+      } else if (res.user.role === "DEALER") {
         router.push("/auctions");
       }
     } catch (error) {
