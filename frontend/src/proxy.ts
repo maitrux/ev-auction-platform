@@ -1,30 +1,28 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import type { UserRole } from "@/types/user";
+
+const ROUTE_ROLES: Record<string, UserRole> = {
+  "/admin": "ADMIN",
+  "/auctions": "DEALER",
+};
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const requiredRole = Object.entries(ROUTE_ROLES).find(([prefix]) =>
+    path.startsWith(prefix),
+  )?.[1];
+
+  if (!requiredRole) {
+    return NextResponse.next();
+  }
+
   const token = request.cookies.get("access_token")?.value;
+  const { verifyAccessToken } = await import("./lib/auth");
+  const session = token ? await verifyAccessToken(token) : null;
 
-  let session: { role: "ADMIN" | "DEALER" } | null = null;
-
-  if (token) {
-    const { verifyAccessToken } = await import("./lib/auth");
-    session = await verifyAccessToken(token);
-  }
-
-  const isAdminRoute = path.startsWith("/admin");
-  const isAuctionsRoute = path.startsWith("/auctions");
-
-  if (isAdminRoute) {
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
-
-  if (isAuctionsRoute) {
-    if (!session || session.role !== "DEALER") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  if (session?.role !== requiredRole) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
