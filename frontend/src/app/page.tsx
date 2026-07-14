@@ -17,9 +17,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
+      const user = await login(email, password);
 
-      router.push("/admin");
+      if (user.role === "ADMIN") {
+        router.push("/admin");
+      } else if (user.role === "DEALER") {
+        router.push("/auctions");
+      }
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);

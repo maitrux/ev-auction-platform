@@ -1,6 +1,8 @@
+import { User } from "@/types/user";
+
 const API_URL = "http://localhost:3001";
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string): Promise<User> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
