@@ -1,6 +1,6 @@
 import { AuctionResult, Role } from '@prisma/client';
-import { AuctionStatus } from '../src/common/constants/auction-status';
 import 'dotenv/config';
+import { AuctionStatus } from '../src/common/constants/auction-status';
 import { createPrismaClient } from '../src/prisma/create-prisma-client';
 
 const prisma = createPrismaClient();
@@ -152,7 +152,7 @@ async function createAuctionsAndBids(): Promise<void> {
   const activeAuction = await prisma.auction.create({
     data: {
       vehicleId: tesla.id,
-      status: AuctionStatus.ACTIVE,
+      status: AuctionStatus.LIVE,
       startsAt: activeStart,
       endsAt: activeEnd,
       reservePrice: 25000,
@@ -180,7 +180,7 @@ async function createAuctionsAndBids(): Promise<void> {
   const completedAuction = await prisma.auction.create({
     data: {
       vehicleId: renault.id,
-      status: AuctionStatus.COMPLETED,
+      status: AuctionStatus.ENDED,
       startsAt: completedStart,
       endsAt: completedEnd,
       reservePrice: 15000,

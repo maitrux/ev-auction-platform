@@ -29,29 +29,21 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-type AuctionStatus =
-  | "DRAFT"
-  | "SCHEDULED"
-  | "ACTIVE"
-  | "ENDED"
-  | "COMPLETED"
-  | "CANCELLED";
+type AuctionStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED";
 
 const statusLabels: Record<AuctionStatus, string> = {
   DRAFT: "Draft",
   SCHEDULED: "Scheduled",
-  ACTIVE: "Active",
+  LIVE: "Live",
   ENDED: "Ended",
-  COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 };
 
 const statusBadgeClasses: Record<AuctionStatus, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
   SCHEDULED: "bg-blue-100 text-blue-700",
-  ACTIVE: "bg-green-100 text-green-700",
-  ENDED: "bg-yellow-100 text-yellow-800",
-  COMPLETED: "bg-purple-100 text-purple-700",
+  LIVE: "bg-green-600 text-white",
+  ENDED: "border border-green-600 text-green-700 bg-white",
   CANCELLED: "bg-red-100 text-red-700",
 };
 

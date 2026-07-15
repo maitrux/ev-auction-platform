@@ -105,7 +105,7 @@ export class AuctionsService {
     if (input.status === 'CANCELLED') {
       if (
         existing.status === AuctionStatus.CANCELLED ||
-        existing.status === AuctionStatus.COMPLETED
+        existing.status === AuctionStatus.ENDED
       ) {
         throw new BadRequestException('Auction cannot be cancelled');
       }

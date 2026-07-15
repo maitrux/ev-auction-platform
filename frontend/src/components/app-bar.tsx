@@ -53,10 +53,6 @@ export function AppBar({ user }: AppBarProps) {
     user.role === "ADMIN"
       ? [
           {
-            href: "/admin",
-            label: "Dashboard",
-          },
-          {
             href: "/admin/auctions",
             label: "Auctions",
           },

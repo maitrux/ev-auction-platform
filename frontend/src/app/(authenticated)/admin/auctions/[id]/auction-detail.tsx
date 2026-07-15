@@ -6,16 +6,16 @@ import {
   type AuctionFormErrors,
 } from "@/lib/auction-form-validation";
 import {
-  cancelAuctionAction,
-  publishAuctionAction,
-} from "@/lib/server/auction-actions";
-import {
   formatAuctionStatus,
   formatCurrency,
   formatDateTime,
   formatNumber,
   toDatetimeLocalValue,
 } from "@/lib/format";
+import {
+  cancelAuctionAction,
+  publishAuctionAction,
+} from "@/lib/server/auction-actions";
 import type { AuctionDetail } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -44,8 +44,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
     minIncrement:
       auction.minIncrement != null ? String(auction.minIncrement) : "",
   });
-  const [publishErrors, setPublishErrors] =
-    useState<AuctionFormErrors>({});
+  const [publishErrors, setPublishErrors] = useState<AuctionFormErrors>({});
 
   const status = formatAuctionStatus(auction.status);
   const shortId = auction.id.slice(0, 8);
@@ -169,11 +168,14 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
       </section>
 
       <section className="mb-8 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Auction settings</h2>
+        <h2 className="mb-4 text-lg font-semibold">Auction details</h2>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-gray-500">Status</dt>
             <dd className="font-medium">{status.label}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500"></dt>
           </div>
           <div>
             <dt className="text-gray-500">Start</dt>
@@ -330,7 +332,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
           </div>
         )}
 
-        {(auction.status === "SCHEDULED" || auction.status === "ACTIVE") && (
+        {(auction.status === "SCHEDULED" || auction.status === "LIVE") && (
           <button
             type="button"
             onClick={handleCancel}
@@ -379,7 +381,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
       <section className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Result</h2>
 
-        {auction.status === "COMPLETED" && auction.winningBid ? (
+        {auction.status === "ENDED" && auction.winningBid ? (
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-gray-500">Winner</dt>

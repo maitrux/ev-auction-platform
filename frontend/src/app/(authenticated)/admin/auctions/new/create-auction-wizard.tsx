@@ -113,9 +113,7 @@ export function CreateAuctionWizard() {
     setError("");
   }
 
-  function handleAuctionChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
+  function handleAuctionChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
     setAuctionForm((current) => ({
@@ -258,7 +256,7 @@ export function CreateAuctionWizard() {
         </section>
       ) : (
         <section>
-          <h2 className="mb-4 text-lg font-semibold">Auction settings</h2>
+          <h2 className="mb-4 text-lg font-semibold">Auction details</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

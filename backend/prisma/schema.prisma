@@ -48,9 +48,8 @@ model Vehicle {
 enum AuctionStatus {
   DRAFT
   SCHEDULED
-  ACTIVE
+  LIVE
   ENDED
-  COMPLETED
   CANCELLED
 }
 

@@ -4,9 +4,8 @@ import { toCreateVehicleInput } from "./vehicle";
 export type AuctionStatus =
   | "DRAFT"
   | "SCHEDULED"
-  | "ACTIVE"
+  | "LIVE"
   | "ENDED"
-  | "COMPLETED"
   | "CANCELLED";
 
 export type AuctionResult = "SOLD" | "UNSOLD";

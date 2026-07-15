@@ -9,15 +9,17 @@ interface PageProps {
 export default async function AuctionDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  try {
-    const auction = await getAuction(id);
+  let auction;
 
-    return (
-      <main className="p-6">
-        <AuctionDetailView auction={auction} />
-      </main>
-    );
+  try {
+    auction = await getAuction(id);
   } catch {
     notFound();
   }
+
+  return (
+    <main className="p-6">
+      <AuctionDetailView auction={auction} />
+    </main>
+  );
 }

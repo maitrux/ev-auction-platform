@@ -21,7 +21,7 @@ export function getEffectiveAuctionStatus(
   }
 
   if (auction.result === AuctionResult.SOLD) {
-    return AuctionStatus.COMPLETED;
+    return AuctionStatus.ENDED;
   }
 
   if (!auction.startsAt || !auction.endsAt) {
@@ -33,7 +33,7 @@ export function getEffectiveAuctionStatus(
   }
 
   if (now >= auction.startsAt && now < auction.endsAt) {
-    return AuctionStatus.ACTIVE;
+    return AuctionStatus.LIVE;
   }
 
   return AuctionStatus.ENDED;
@@ -43,7 +43,7 @@ export function getInitialAuctionStatus(
   startsAt: Date,
   now: Date = new Date(),
 ): AuctionStatus {
-  return startsAt <= now ? AuctionStatus.ACTIVE : AuctionStatus.SCHEDULED;
+  return startsAt <= now ? AuctionStatus.LIVE : AuctionStatus.SCHEDULED;
 }
 
 export { AuctionResult, AuctionStatus };
