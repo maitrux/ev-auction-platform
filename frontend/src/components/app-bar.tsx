@@ -1,6 +1,6 @@
 "use client";
 
-import { logout } from "@/lib/api";
+import { logout } from "@/lib/client/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

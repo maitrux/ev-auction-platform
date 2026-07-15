@@ -1,3 +1,9 @@
 export type { JwtPayload, LoginResponse } from "./auth";
 export type { User, UserRole } from "./user";
-export type { Vehicle } from "./vehicle";
+export type {
+  CreateVehicleInput,
+  Vehicle,
+  VehicleCondition,
+  VehicleFormState,
+} from "./vehicle";
+export { toCreateVehicleInput } from "./vehicle";
