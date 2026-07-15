@@ -7,3 +7,16 @@ export type {
   VehicleFormState,
 } from "./vehicle";
 export { toCreateVehicleInput } from "./vehicle";
+export type {
+  AuctionBid,
+  AuctionDetail,
+  AuctionFormState,
+  AuctionListItem,
+  AuctionResult,
+  AuctionStatus,
+  CreateAuctionWithVehicleInput,
+} from "./auction";
+export {
+  initialAuctionForm,
+  toCreateAuctionWithVehicleInput,
+} from "./auction";

@@ -1,7 +1,31 @@
-export default function AuctionsPage() {
+import { getAuctions } from "@/lib/server/auctions";
+import type { AuctionListItem } from "@/types";
+import { AuctionsPageClient } from "./auctions-page";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Failed to load auctions. Please try again later.";
+}
+
+export default async function Page() {
+  let auctions: AuctionListItem[] = [];
+  let error: string | null = null;
+
+  try {
+    auctions = await getAuctions();
+  } catch (err) {
+    error = getErrorMessage(err);
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <h1 className="text-3xl font-bold">Available EV Auctions 🚀</h1>
+    <main className="p-6">
+      <AuctionsPageClient
+        auctions={auctions}
+        error={error}
+      />
     </main>
   );
 }
