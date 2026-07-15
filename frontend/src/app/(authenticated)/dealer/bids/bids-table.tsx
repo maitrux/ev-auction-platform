@@ -1,5 +1,6 @@
 "use client";
 
+import { DealerAuctionOutcomeBadge } from "@/components/dealer-auction-outcome-badge";
 import {
   DealerAuctionFrom,
   getDealerAuctionDetailHref,
@@ -36,6 +37,7 @@ export function BidsTable({ bids }: BidsTableProps) {
             <th className="px-4 py-3">Auction ID</th>
             <th className="px-4 py-3">Vehicle</th>
             <th className="px-4 py-3">Auction status</th>
+            <th className="px-4 py-3">Outcome</th>
             <th className="px-4 py-3">Your bid</th>
             <th className="px-4 py-3">Placed</th>
             <th className="px-4 py-3">Auction ends</th>
@@ -77,6 +79,16 @@ export function BidsTable({ bids }: BidsTableProps) {
                   >
                     {status.label}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {bid.auction.outcome ? (
+                    <DealerAuctionOutcomeBadge
+                      outcome={bid.auction.outcome}
+                      won={bid.auction.won}
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </td>
                 <td className="px-4 py-3">{formatCurrency(bid.amount)}</td>
                 <td className="px-4 py-3">{formatDateTime(bid.createdAt)}</td>
