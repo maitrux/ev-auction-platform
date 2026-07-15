@@ -1,3 +1,5 @@
+import { AuctionOutcome, AuctionStatus } from "@/types";
+
 const LOCALE = "en-GB";
 
 export function formatDate(date: string | Date): string {
@@ -29,8 +31,6 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-type AuctionStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CANCELLED";
-
 const statusLabels: Record<AuctionStatus, string> = {
   DRAFT: "Draft",
   SCHEDULED: "Scheduled",
@@ -47,6 +47,18 @@ const statusBadgeClasses: Record<AuctionStatus, string> = {
   CANCELLED: "bg-red-100 text-red-700",
 };
 
+const outcomeLabels: Record<AuctionOutcome, string> = {
+  PENDING: "Pending",
+  SOLD: "Sold",
+  UNSOLD: "Unsold",
+};
+
+const outcomeBadgeClasses: Record<AuctionOutcome, string> = {
+  PENDING: "bg-yellow-100 text-yellow-600",
+  SOLD: "bg-green-100 text-green-800",
+  UNSOLD: "bg-red-100 text-red-700",
+};
+
 export function formatAuctionStatus(status: AuctionStatus): {
   label: string;
   badgeClassName: string;
@@ -57,6 +69,15 @@ export function formatAuctionStatus(status: AuctionStatus): {
   };
 }
 
+export function formatAuctionOutcome(outcome: AuctionOutcome): {
+  label: string;
+  badgeClassName: string;
+} {
+  return {
+    label: outcomeLabels[outcome],
+    badgeClassName: outcomeBadgeClasses[outcome],
+  };
+}
 export function toDatetimeLocalValue(date: string | Date): string {
   const value = new Date(date);
   const offset = value.getTimezoneOffset();

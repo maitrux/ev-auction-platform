@@ -14,8 +14,14 @@ import {
 } from "@/lib/format";
 import {
   cancelAuctionAction,
+  confirmAuctionOutcomeAction,
   publishAuctionAction,
 } from "@/lib/server/auction-actions";
+import {
+  formatAuctionOutcome,
+  getAcceptOutcomeError,
+  getHighestBid,
+} from "@/lib/auction-outcome";
 import type { AuctionDetail } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,6 +54,49 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
 
   const status = formatAuctionStatus(auction.status);
   const shortId = auction.id.slice(0, 8);
+  const highestBid = getHighestBid(auction.bids);
+  const acceptError =
+    auction.status === "ENDED" && auction.outcome === "PENDING"
+      ? getAcceptOutcomeError(auction.reservePrice, auction.bids)
+      : null;
+
+  async function handleConfirmOutcome(outcome: "SOLD" | "UNSOLD") {
+    if (outcome === "SOLD") {
+      const validationError = getAcceptOutcomeError(
+        auction.reservePrice,
+        auction.bids,
+      );
+
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+
+    if (
+      !confirm(
+        outcome === "SOLD"
+          ? `Accept the highest bid of ${highestBid ? formatCurrency(highestBid.amount) : ""} and mark this auction as sold?`
+          : "Reject all bids and mark this auction as unsold?",
+      )
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    const result = await confirmAuctionOutcomeAction(auction.id, outcome);
+
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    router.refresh();
+  }
 
   async function handleCancel() {
     if (!confirm("Are you sure you want to cancel this auction?")) {
@@ -360,29 +409,75 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                 </tr>
               </thead>
               <tbody>
-                {auction.bids.map((bid) => (
-                  <tr
-                    key={bid.id}
-                    className="border-b"
-                  >
-                    <td className="px-2 py-2">{bid.dealer.name}</td>
-                    <td className="px-2 py-2">{formatCurrency(bid.amount)}</td>
-                    <td className="px-2 py-2">
-                      {formatDateTime(bid.createdAt)}
-                    </td>
-                  </tr>
-                ))}
+                {auction.bids.map((bid) => {
+                  const isHighest = highestBid?.id === bid.id;
+
+                  return (
+                    <tr
+                      key={bid.id}
+                      className={`border-b ${isHighest ? "bg-green-50" : ""}`}
+                    >
+                      <td className="px-2 py-2">
+                        {bid.dealer.name}
+                        {isHighest ? (
+                          <span className="ml-2 text-xs font-medium text-green-700">
+                            Highest
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-2 py-2">{formatCurrency(bid.amount)}</td>
+                      <td className="px-2 py-2">
+                        {formatDateTime(bid.createdAt)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
+
+        {auction.status === "ENDED" && auction.outcome === "PENDING" ? (
+          <div className="mt-4 border-t pt-4">
+            <p className="mb-3 text-sm text-gray-600">
+              This auction has ended and is awaiting your review.
+            </p>
+            {acceptError ? (
+              <p className="mb-3 text-sm text-amber-700">{acceptError}</p>
+            ) : null}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => handleConfirmOutcome("SOLD")}
+                disabled={isSubmitting || Boolean(acceptError)}
+                className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmOutcome("UNSOLD")}
+                disabled={isSubmitting}
+                className="rounded border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Result</h2>
 
-        {auction.status === "ENDED" && auction.winningBid ? (
+        {auction.status === "ENDED" && auction.outcome === "SOLD" && auction.winningBid ? (
           <dl className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt className="text-gray-500">Outcome</dt>
+              <dd className="font-medium">
+                {formatAuctionOutcome(auction.outcome)}
+              </dd>
+            </div>
             <div>
               <dt className="text-gray-500">Winner</dt>
               <dd className="font-medium">{auction.winningBid.dealer.name}</dd>
@@ -398,8 +493,14 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
               <dd className="font-medium">Pending</dd>
             </div>
           </dl>
-        ) : auction.status === "ENDED" && auction.result === "UNSOLD" ? (
-          <p className="text-sm text-gray-600">Ended — unsold</p>
+        ) : auction.status === "ENDED" && auction.outcome === "UNSOLD" ? (
+          <p className="text-sm text-gray-600">
+            Outcome: {formatAuctionOutcome(auction.outcome)}
+          </p>
+        ) : auction.status === "ENDED" && auction.outcome === "PENDING" ? (
+          <p className="text-sm text-gray-600">
+            Outcome: {formatAuctionOutcome(auction.outcome)}
+          </p>
         ) : (
           <p className="text-sm text-gray-600">No result yet.</p>
         )}

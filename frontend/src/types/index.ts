@@ -12,7 +12,7 @@ export type {
   AuctionDetail,
   AuctionFormState,
   AuctionListItem,
-  AuctionResult,
+  AuctionOutcome,
   AuctionStatus,
   CreateAuctionWithVehicleInput,
 } from "./auction";

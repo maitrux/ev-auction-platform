@@ -148,6 +148,8 @@ async function createAuctionsAndBids(): Promise<void> {
 
   const completedStart = new Date('2026-07-01T10:00:00');
   const completedEnd = new Date('2026-07-05T10:00:00');
+  const pendingReviewStart = new Date('2026-06-10T10:00:00');
+  const pendingReviewEnd = new Date('2026-06-14T10:00:00');
 
   const activeAuction = await prisma.auction.create({
     data: {
@@ -189,6 +191,17 @@ async function createAuctionsAndBids(): Promise<void> {
     } as never,
   });
 
+  const pendingReviewAuction = await prisma.auction.create({
+    data: {
+      vehicleId: vw.id,
+      status: AuctionStatus.ENDED,
+      startsAt: pendingReviewStart,
+      endsAt: pendingReviewEnd,
+      reservePrice: 22000,
+      minIncrement: 300,
+    } as never,
+  });
+
   await prisma.bid.create({
     data: {
       auctionId: activeAuction.id,
@@ -213,6 +226,24 @@ async function createAuctionsAndBids(): Promise<void> {
       dealerId: dealerA.id,
       amount: 27500,
       createdAt: new Date(now.getTime() - 30 * 60 * 1000),
+    },
+  });
+
+  await prisma.bid.create({
+    data: {
+      auctionId: pendingReviewAuction.id,
+      dealerId: dealerB.id,
+      amount: 21400,
+      createdAt: new Date('2026-06-12T12:00:00'),
+    },
+  });
+
+  await prisma.bid.create({
+    data: {
+      auctionId: pendingReviewAuction.id,
+      dealerId: dealerC.id,
+      amount: 22800,
+      createdAt: new Date('2026-06-13T14:00:00'),
     },
   });
 

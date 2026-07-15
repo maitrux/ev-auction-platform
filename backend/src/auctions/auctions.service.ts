@@ -5,12 +5,18 @@ import {
 } from '@nestjs/common';
 import type { Vehicle } from '@prisma/client';
 import { AuctionResult } from 'src/common/constants/auction-result';
+import { AuctionOutcome } from 'src/common/constants/auction-outcome';
 import type { AuctionStatus as AuctionStatusType } from 'src/common/constants/auction-status';
 import { AuctionStatus } from 'src/common/constants/auction-status';
 import type { CreateAuctionWithVehicleInput } from 'src/common/schemas/create-auction-with-vehicle.schema';
 import type { UpdateAuctionInput } from 'src/common/schemas/update-auction.schema';
 import { throwIfDuplicateVin } from 'src/common/utils/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  findHighestBid,
+  getAcceptOutcomeError,
+  getAuctionOutcome,
+} from './auction-outcome';
 import {
   getEffectiveAuctionStatus,
   getInitialAuctionStatus,
@@ -143,6 +149,10 @@ export class AuctionsService {
       return this.toDetail(updated);
     }
 
+    if (input.outcome === 'SOLD' || input.outcome === 'UNSOLD') {
+      return this.confirmOutcome(id, input.outcome);
+    }
+
     if (input.publish) {
       if (existing.status !== AuctionStatus.DRAFT) {
         throw new BadRequestException('Only draft auctions can be published');
@@ -194,6 +204,74 @@ export class AuctionsService {
         endsAt: input.endsAt,
         reservePrice: input.reservePrice,
         minIncrement: input.minIncrement,
+      },
+      include: auctionDetailInclude,
+    });
+
+    return this.toDetail(updated);
+  }
+
+  private async confirmOutcome(id: string, outcome: 'SOLD' | 'UNSOLD') {
+    const auction = await this.prisma.auction.findUnique({
+      where: { id },
+      include: auctionDetailInclude,
+    });
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    const effectiveStatus = getEffectiveAuctionStatus(auction);
+
+    if (effectiveStatus !== AuctionStatus.ENDED) {
+      throw new BadRequestException(
+        'Outcome can only be confirmed for ended auctions',
+      );
+    }
+
+    const currentOutcome = getAuctionOutcome(effectiveStatus, auction.result);
+
+    if (currentOutcome !== AuctionOutcome.PENDING) {
+      throw new BadRequestException(
+        'Auction outcome has already been confirmed',
+      );
+    }
+
+    if (outcome === 'SOLD') {
+      const acceptError = getAcceptOutcomeError(
+        auction.reservePrice,
+        auction.bids,
+      );
+
+      if (acceptError) {
+        throw new BadRequestException(acceptError);
+      }
+
+      const highestBid = findHighestBid(auction.bids);
+
+      if (!highestBid) {
+        throw new BadRequestException('Cannot accept an auction with no bids');
+      }
+
+      const updated = await this.prisma.auction.update({
+        where: { id },
+        data: {
+          status: AuctionStatus.ENDED,
+          result: AuctionResult.SOLD,
+          winningBidId: highestBid.id,
+        },
+        include: auctionDetailInclude,
+      });
+
+      return this.toDetail(updated);
+    }
+
+    const updated = await this.prisma.auction.update({
+      where: { id },
+      data: {
+        status: AuctionStatus.ENDED,
+        result: AuctionResult.UNSOLD,
+        winningBidId: null,
       },
       include: auctionDetailInclude,
     });
@@ -263,14 +341,16 @@ export class AuctionsService {
 
   private toListItem(auction: AuctionListRecord) {
     const highestBid = auction.bids[0]?.amount ?? null;
+    const effectiveStatus = getEffectiveAuctionStatus(auction);
 
     return {
       id: auction.id,
-      status: getEffectiveAuctionStatus(auction),
+      status: effectiveStatus,
       startsAt: auction.startsAt,
       endsAt: auction.endsAt,
       bidCount: auction._count.bids,
       highestBid,
+      outcome: getAuctionOutcome(effectiveStatus, auction.result),
       vehicle: auction.vehicle,
     };
   }
@@ -283,17 +363,19 @@ export class AuctionsService {
 
       return max;
     }, null);
+    const effectiveStatus = getEffectiveAuctionStatus(auction);
+    const outcome = getAuctionOutcome(effectiveStatus, auction.result);
 
     return {
       id: auction.id,
-      status: getEffectiveAuctionStatus(auction),
+      status: effectiveStatus,
       startsAt: auction.startsAt,
       endsAt: auction.endsAt,
       reservePrice: auction.reservePrice,
       minIncrement: auction.minIncrement,
       bidCount: auction._count.bids,
       highestBid,
-      result: this.toAuctionResult(auction.result),
+      outcome,
       vehicle: auction.vehicle,
       bids: auction.bids.map((bid) => ({
         id: bid.id,
@@ -301,20 +383,13 @@ export class AuctionsService {
         createdAt: bid.createdAt,
         dealer: bid.dealer,
       })),
-      winningBid: auction.winningBid
-        ? {
-            amount: auction.winningBid.amount,
-            dealer: auction.winningBid.dealer,
-          }
-        : null,
+      winningBid:
+        outcome === AuctionOutcome.SOLD && auction.winningBid
+          ? {
+              amount: auction.winningBid.amount,
+              dealer: auction.winningBid.dealer,
+            }
+          : null,
     };
-  }
-
-  private toAuctionResult(result: string | null): AuctionResult | null {
-    if (result === AuctionResult.SOLD || result === AuctionResult.UNSOLD) {
-      return result;
-    }
-
-    return null;
   }
 }

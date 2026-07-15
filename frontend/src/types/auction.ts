@@ -8,7 +8,7 @@ export type AuctionStatus =
   | "ENDED"
   | "CANCELLED";
 
-export type AuctionResult = "SOLD" | "UNSOLD";
+export type AuctionOutcome = "PENDING" | "SOLD" | "UNSOLD";
 
 export interface AuctionListItem {
   id: string;
@@ -17,6 +17,7 @@ export interface AuctionListItem {
   endsAt: string | null;
   bidCount: number;
   highestBid: number | null;
+  outcome: AuctionOutcome | null;
   vehicle: {
     make: string;
     model: string;
@@ -60,7 +61,7 @@ export interface AuctionDetail extends AuctionListItem {
       name: string;
     };
   } | null;
-  result: AuctionResult | null;
+  outcome: AuctionOutcome | null;
 }
 
 export type AuctionFormState = {

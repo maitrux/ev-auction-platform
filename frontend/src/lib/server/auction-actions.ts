@@ -37,3 +37,17 @@ export async function publishAuctionAction(
     ...data,
   });
 }
+
+export async function confirmAuctionOutcomeAction(
+  id: string,
+  outcome: "SOLD" | "UNSOLD",
+) {
+  const result = await updateAuction(id, { outcome });
+
+  if (result.success) {
+    revalidatePath("/admin/auctions");
+    revalidatePath(`/admin/auctions/${id}`);
+  }
+
+  return result;
+}

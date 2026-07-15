@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const updateAuctionSchema = z
   .object({
     status: z.enum(['CANCELLED']).optional(),
+    outcome: z.enum(['SOLD', 'UNSOLD']).optional(),
     startsAt: z.coerce.date().optional(),
     endsAt: z.coerce.date().optional(),
     reservePrice: z.number().positive().optional(),

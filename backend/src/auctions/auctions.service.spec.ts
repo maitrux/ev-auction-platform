@@ -1,4 +1,7 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { AuctionOutcome } from '../common/constants/auction-outcome';
+import { AuctionResult } from '../common/constants/auction-result';
 import { AuctionStatus } from '../common/constants/auction-status';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuctionsService } from './auctions.service';
@@ -137,6 +140,125 @@ describe('AuctionsService', () => {
       });
       expect(auction).not.toHaveProperty('highestBid');
       expect(auction).not.toHaveProperty('bidCount');
+    });
+  });
+
+  describe('confirmOutcome via update', () => {
+    const auctionDetailInclude = expect.any(Object);
+
+    function buildEndedAuction(overrides: Record<string, unknown> = {}) {
+      return {
+        id: 'auction-ended',
+        status: AuctionStatus.LIVE,
+        startsAt: new Date('2026-06-01T12:00:00.000Z'),
+        endsAt: new Date('2026-06-05T12:00:00.000Z'),
+        reservePrice: 15000,
+        minIncrement: 200,
+        result: null,
+        winningBidId: null,
+        winningBid: null,
+        vehicle: {
+          id: 'vehicle-1',
+          vin: 'VIN123',
+          make: 'Renault',
+          model: 'Zoe',
+          year: 2021,
+          mileage: 30000,
+          batteryCapacityKwh: 52,
+          batterySoH: 92,
+          rangeKm: 300,
+          registrationDate: new Date('2021-01-01'),
+          condition: 'GOOD',
+          conditionNotes: null,
+          photos: [],
+          city: 'Paris',
+          country: 'France',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        bids: [
+          {
+            id: 'bid-1',
+            amount: 16000,
+            createdAt: new Date('2026-07-04T12:00:00.000Z'),
+            dealer: { name: 'Dealer A' },
+          },
+        ],
+        _count: { bids: 1 },
+        ...overrides,
+      };
+    }
+
+    it('accepts the highest bid when it meets the reserve', async () => {
+      const auction = buildEndedAuction();
+      prisma.auction.findUnique.mockResolvedValue(auction);
+      prisma.auction.update.mockResolvedValue({
+        ...auction,
+        status: AuctionStatus.ENDED,
+        result: AuctionResult.SOLD,
+        winningBidId: 'bid-1',
+        winningBid: {
+          amount: 16000,
+          dealer: { name: 'Dealer A' },
+        },
+      });
+
+      const result = await service.update('auction-ended', { outcome: 'SOLD' });
+
+      expect(prisma.auction.update).toHaveBeenCalledWith({
+        where: { id: 'auction-ended' },
+        data: {
+          status: AuctionStatus.ENDED,
+          result: AuctionResult.SOLD,
+          winningBidId: 'bid-1',
+        },
+        include: auctionDetailInclude,
+      });
+      expect(result.outcome).toBe(AuctionOutcome.SOLD);
+      expect(result.winningBid).toEqual({
+        amount: 16000,
+        dealer: { name: 'Dealer A' },
+      });
+    });
+
+    it('rejects accept when the highest bid is below reserve', async () => {
+      prisma.auction.findUnique.mockResolvedValue(
+        buildEndedAuction({
+          reservePrice: 17000,
+        }),
+      );
+
+      await expect(
+        service.update('auction-ended', { outcome: 'SOLD' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('marks the auction as unsold on reject', async () => {
+      const auction = buildEndedAuction();
+      prisma.auction.findUnique.mockResolvedValue(auction);
+      prisma.auction.update.mockResolvedValue({
+        ...auction,
+        status: AuctionStatus.ENDED,
+        result: AuctionResult.UNSOLD,
+        winningBidId: null,
+        winningBid: null,
+      });
+
+      const result = await service.update('auction-ended', {
+        outcome: 'UNSOLD',
+      });
+
+      expect(prisma.auction.update).toHaveBeenCalledWith({
+        where: { id: 'auction-ended' },
+        data: {
+          status: AuctionStatus.ENDED,
+          result: AuctionResult.UNSOLD,
+          winningBidId: null,
+        },
+        include: auctionDetailInclude,
+      });
+      expect(result.outcome).toBe(AuctionOutcome.UNSOLD);
+      expect(result.winningBid).toBeNull();
     });
   });
 });
