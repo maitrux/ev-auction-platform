@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { AuctionsModule } from './auctions/auctions.module';
+import { BidsModule } from './bids/bids.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuctionsModule } from './auctions/auctions.module';
     UsersModule,
     VehiclesModule,
     AuctionsModule,
+    BidsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
