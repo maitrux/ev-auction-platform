@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateVehicleInput } from 'src/common/schemas/create-vehicle.schema';
+import { throwIfDuplicateVin } from 'src/common/utils/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -11,8 +12,13 @@ export class VehiclesService {
   }
 
   async create(input: CreateVehicleInput) {
-    return this.prisma.vehicle.create({
-      data: input,
-    });
+    try {
+      return await this.prisma.vehicle.create({
+        data: input,
+      });
+    } catch (error) {
+      throwIfDuplicateVin(error);
+      throw error;
+    }
   }
 }

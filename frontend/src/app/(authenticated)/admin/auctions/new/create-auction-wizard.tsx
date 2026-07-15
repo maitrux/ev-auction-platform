@@ -143,16 +143,14 @@ export function CreateAuctionWizard() {
       toCreateAuctionWithVehicleInput(vehicleForm, auctionForm, true),
     );
 
-    setIsSubmitting(false);
-
     if (!result.success) {
       setVehicleFieldErrors(result.fieldErrors ?? {});
       setError(result.message);
+      setIsSubmitting(false);
       return;
     }
 
-    router.push(`/admin/auctions/${result.auction.id}`);
-    router.refresh();
+    router.replace("/admin/auctions");
   }
 
   function handleNext() {
@@ -189,16 +187,14 @@ export function CreateAuctionWizard() {
       toCreateAuctionWithVehicleInput(vehicleForm, auctionForm, false),
     );
 
-    setIsSubmitting(false);
-
     if (!result.success) {
       setVehicleFieldErrors(result.fieldErrors ?? {});
       setError(result.message);
+      setIsSubmitting(false);
       return;
     }
 
-    router.push(`/admin/auctions/${result.auction.id}`);
-    router.refresh();
+    router.replace(`/admin/auctions/${result.auction.id}`);
   }
 
   return (

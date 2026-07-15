@@ -143,8 +143,13 @@ export function hasFormErrors(errors: VehicleFormErrors): boolean {
   return Object.keys(errors).length > 0;
 }
 
+type BackendFieldNode = {
+  errors?: string[];
+  properties?: Record<string, BackendFieldNode>;
+};
+
 type BackendValidationBody = {
-  properties?: Record<string, { errors?: string[] }>;
+  properties?: Record<string, BackendFieldNode>;
 };
 
 const backendFieldMessages: Record<string, string> = {
@@ -162,6 +167,22 @@ const backendFieldMessages: Record<string, string> = {
   country: "Country is required",
 };
 
+function getVehicleFieldProperties(
+  properties: Record<string, BackendFieldNode>,
+): Record<string, BackendFieldNode> | null {
+  const vehicleNode = properties.vehicle;
+
+  if (vehicleNode?.properties) {
+    return vehicleNode.properties;
+  }
+
+  const hasVehicleField = Object.keys(properties).some(
+    (field) => field in backendFieldMessages,
+  );
+
+  return hasVehicleField ? properties : null;
+}
+
 export function parseBackendValidationErrors(
   body: unknown,
 ): VehicleFormErrors {
@@ -175,15 +196,23 @@ export function parseBackendValidationErrors(
     return {};
   }
 
+  const fieldProperties = getVehicleFieldProperties(properties);
+
+  if (!fieldProperties) {
+    return {};
+  }
+
   const errors: VehicleFormErrors = {};
 
-  for (const [field, value] of Object.entries(properties)) {
-    if (!(field in backendFieldMessages) || !value?.errors?.[0]) {
+  for (const [field, value] of Object.entries(fieldProperties)) {
+    const message = value?.errors?.[0];
+
+    if (!(field in backendFieldMessages) || !message) {
       continue;
     }
 
     errors[field as keyof VehicleFormState] =
-      backendFieldMessages[field] ?? value.errors[0];
+      message ?? backendFieldMessages[field];
   }
 
   return errors;

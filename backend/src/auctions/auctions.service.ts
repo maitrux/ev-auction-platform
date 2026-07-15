@@ -8,6 +8,7 @@ import { AuctionStatus } from 'src/common/constants/auction-status';
 import type { AuctionStatus as AuctionStatusType } from 'src/common/constants/auction-status';
 import type { CreateAuctionWithVehicleInput } from 'src/common/schemas/create-auction-with-vehicle.schema';
 import type { UpdateAuctionInput } from 'src/common/schemas/update-auction.schema';
+import { throwIfDuplicateVin } from 'src/common/utils/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   getEffectiveAuctionStatus,
@@ -181,9 +182,16 @@ export class AuctionsService {
     vehicle: CreateAuctionWithVehicleInput['vehicle'],
     auctionData: Omit<AuctionCreateData, 'vehicleId'>,
   ): Promise<AuctionDetailRecord> {
-    const createdVehicle = await this.prisma.vehicle.create({
-      data: vehicle,
-    });
+    let createdVehicle;
+
+    try {
+      createdVehicle = await this.prisma.vehicle.create({
+        data: vehicle,
+      });
+    } catch (error) {
+      throwIfDuplicateVin(error);
+      throw error;
+    }
 
     try {
       return (await this.prisma.auction.create({

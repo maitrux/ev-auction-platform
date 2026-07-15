@@ -5,11 +5,18 @@ import {
   updateAuction,
 } from "@/lib/server/auctions";
 import type { CreateAuctionWithVehicleInput } from "@/types";
+import { revalidatePath } from "next/cache";
 
 export async function createAuctionWithVehicleAction(
   input: CreateAuctionWithVehicleInput,
 ) {
-  return createAuctionWithVehicle(input);
+  const result = await createAuctionWithVehicle(input);
+
+  if (result.success) {
+    revalidatePath("/admin/auctions");
+  }
+
+  return result;
 }
 
 export async function cancelAuctionAction(id: string) {
