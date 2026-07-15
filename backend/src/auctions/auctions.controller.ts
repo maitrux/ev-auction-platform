@@ -33,6 +33,12 @@ export class AuctionsController {
     return this.auctionsService.findAll();
   }
 
+  @Get('open')
+  @Roles(UserRole.DEALER)
+  findOpenForDealer() {
+    return this.auctionsService.findOpenForDealer();
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN)
   findOne(@Param('id') id: string) {

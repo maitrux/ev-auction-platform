@@ -1,5 +1,19 @@
 import { Prisma } from '@prisma/client';
 
+export const dealerAuctionListInclude = {
+  vehicle: {
+    select: {
+      make: true,
+      model: true,
+      year: true,
+      photos: true,
+      city: true,
+      country: true,
+      mileage: true,
+    },
+  },
+} satisfies Prisma.AuctionInclude;
+
 export const auctionListInclude = {
   vehicle: {
     select: {
@@ -46,6 +60,10 @@ export const auctionDetailInclude = {
 
 export type AuctionListRecord = Prisma.AuctionGetPayload<{
   include: typeof auctionListInclude;
+}>;
+
+export type DealerAuctionListRecord = Prisma.AuctionGetPayload<{
+  include: typeof dealerAuctionListInclude;
 }>;
 
 export type AuctionDetailRecord = Prisma.AuctionGetPayload<{

@@ -24,6 +24,22 @@ export interface AuctionListItem {
   };
 }
 
+export interface DealerAuctionListItem {
+  id: string;
+  status: AuctionStatus;
+  startsAt: string | null;
+  endsAt: string | null;
+  vehicle: {
+    make: string;
+    model: string;
+    year: number;
+    photos: string[];
+    city: string;
+    country: string;
+    mileage: number;
+  };
+}
+
 export interface AuctionBid {
   id: string;
   amount: number;

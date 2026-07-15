@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { Vehicle } from '@prisma/client';
 import { AuctionResult } from 'src/common/constants/auction-result';
-import { AuctionStatus } from 'src/common/constants/auction-status';
 import type { AuctionStatus as AuctionStatusType } from 'src/common/constants/auction-status';
+import { AuctionStatus } from 'src/common/constants/auction-status';
 import type { CreateAuctionWithVehicleInput } from 'src/common/schemas/create-auction-with-vehicle.schema';
 import type { UpdateAuctionInput } from 'src/common/schemas/update-auction.schema';
 import { throwIfDuplicateVin } from 'src/common/utils/prisma-errors';
@@ -17,8 +18,10 @@ import {
 import {
   auctionDetailInclude,
   auctionListInclude,
+  dealerAuctionListInclude,
   type AuctionDetailRecord,
   type AuctionListRecord,
+  type DealerAuctionListRecord,
 } from './auction.types';
 
 type AuctionCreateData = {
@@ -41,6 +44,26 @@ export class AuctionsService {
     });
 
     return auctions.map((auction) => this.toListItem(auction));
+  }
+
+  async findOpenForDealer() {
+    const auctions = await this.prisma.auction.findMany({
+      where: {
+        status: {
+          notIn: [AuctionStatus.DRAFT, AuctionStatus.CANCELLED],
+        },
+      },
+      include: dealerAuctionListInclude,
+    });
+
+    return auctions
+      .map((auction) => this.toDealerListItem(auction))
+      .filter(
+        (auction) =>
+          auction.status === AuctionStatus.LIVE ||
+          auction.status === AuctionStatus.SCHEDULED,
+      )
+      .sort((a, b) => this.compareDealerAuctions(a, b));
   }
 
   async findOne(id: string) {
@@ -182,7 +205,7 @@ export class AuctionsService {
     vehicle: CreateAuctionWithVehicleInput['vehicle'],
     auctionData: Omit<AuctionCreateData, 'vehicleId'>,
   ): Promise<AuctionDetailRecord> {
-    let createdVehicle;
+    let createdVehicle: Vehicle;
 
     try {
       createdVehicle = await this.prisma.vehicle.create({
@@ -194,19 +217,48 @@ export class AuctionsService {
     }
 
     try {
-      return (await this.prisma.auction.create({
+      return await this.prisma.auction.create({
         data: {
           vehicleId: createdVehicle.id,
           ...auctionData,
         },
         include: auctionDetailInclude,
-      })) as AuctionDetailRecord;
+      });
     } catch (error) {
       await this.prisma.vehicle.delete({
         where: { id: createdVehicle.id },
       });
       throw error;
     }
+  }
+
+  private compareDealerAuctions(
+    a: ReturnType<AuctionsService['toDealerListItem']>,
+    b: ReturnType<AuctionsService['toDealerListItem']>,
+  ) {
+    if (a.status !== b.status) {
+      return a.status === AuctionStatus.LIVE ? -1 : 1;
+    }
+
+    if (a.status === AuctionStatus.LIVE) {
+      return (
+        new Date(a.endsAt ?? 0).getTime() - new Date(b.endsAt ?? 0).getTime()
+      );
+    }
+
+    return (
+      new Date(a.startsAt ?? 0).getTime() - new Date(b.startsAt ?? 0).getTime()
+    );
+  }
+
+  private toDealerListItem(auction: DealerAuctionListRecord) {
+    return {
+      id: auction.id,
+      status: getEffectiveAuctionStatus(auction),
+      startsAt: auction.startsAt,
+      endsAt: auction.endsAt,
+      vehicle: auction.vehicle,
+    };
   }
 
   private toListItem(auction: AuctionListRecord) {
