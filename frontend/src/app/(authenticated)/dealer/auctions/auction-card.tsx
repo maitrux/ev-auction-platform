@@ -1,4 +1,8 @@
 import { AuctionCountdown } from "@/components/auction-countdown";
+import {
+  DealerAuctionFrom,
+  getDealerAuctionDetailHref,
+} from "@/lib/dealer-auction-navigation";
 import { formatAuctionStatus, formatNumber } from "@/lib/format";
 import type { DealerAuctionListItem } from "@/types/auction";
 import Image from "next/image";
@@ -37,9 +41,17 @@ function VehicleImage({ photos, title }: { photos: string[]; title: string }) {
         aria-hidden="true"
       >
         <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-        <circle cx="7" cy="17" r="2" />
+        <circle
+          cx="7"
+          cy="17"
+          r="2"
+        />
         <path d="M9 17h6" />
-        <circle cx="17" cy="17" r="2" />
+        <circle
+          cx="17"
+          cy="17"
+          r="2"
+        />
       </svg>
     </div>
   );
@@ -51,7 +63,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
 
   return (
     <Link
-      href={`/dealer/auctions/${auction.id}`}
+      href={getDealerAuctionDetailHref(auction.id, DealerAuctionFrom.AUCTIONS)}
       className="group flex flex-col overflow-hidden rounded-lg border bg-white transition hover:border-blue-300 hover:shadow-md"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
@@ -68,9 +80,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700">
-            {title}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700">
+              {title}
+            </h2>
+            <span className="text-sm text-gray-600">
+              #{auction.id.slice(0, 8)}
+            </span>
+          </div>
           <p className="text-sm text-gray-600">
             {auction.vehicle.city}, {auction.vehicle.country}
           </p>

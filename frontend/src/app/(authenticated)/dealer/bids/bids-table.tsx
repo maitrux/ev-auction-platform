@@ -1,3 +1,9 @@
+"use client";
+
+import {
+  DealerAuctionFrom,
+  getDealerAuctionDetailHref,
+} from "@/lib/dealer-auction-navigation";
 import {
   formatAuctionStatus,
   formatCurrency,
@@ -5,12 +11,15 @@ import {
   formatDateTime,
 } from "@/lib/format";
 import type { Bid } from "@/types/bid";
+import { useRouter } from "next/navigation";
 
 interface BidsTableProps {
   bids: Bid[];
 }
 
 export function BidsTable({ bids }: BidsTableProps) {
+  const router = useRouter();
+
   if (bids.length === 0) {
     return (
       <div className="rounded-lg border bg-white p-8 text-center text-gray-600">
@@ -22,8 +31,9 @@ export function BidsTable({ bids }: BidsTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border bg-white">
       <table className="w-full text-left text-sm">
-        <thead className="border-b bg-gray-50">
+        <thead className="border-b bg-gray-200">
           <tr>
+            <th className="px-4 py-3">Auction ID</th>
             <th className="px-4 py-3">Vehicle</th>
             <th className="px-4 py-3">Auction status</th>
             <th className="px-4 py-3">Your bid</th>
@@ -36,12 +46,28 @@ export function BidsTable({ bids }: BidsTableProps) {
           {bids.map((bid) => {
             const status = formatAuctionStatus(bid.auction.status);
             const { vehicle } = bid.auction;
-
+            const href = getDealerAuctionDetailHref(
+              bid.auction.id,
+              DealerAuctionFrom.BIDS,
+            );
             return (
               <tr
                 key={bid.id}
                 className="border-b hover:bg-gray-50"
+                onClick={() => router.push(href)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    router.push(href);
+                  }
+                }}
+                tabIndex={0}
+                role="link"
+                aria-label={`View auction for ${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               >
+                <td className="px-4 py-3 text-sm text-gray-500">
+                  #{bid.auction.id.slice(0, 8)}
+                </td>
                 <td className="px-4 py-3 font-medium">
                   {vehicle.year} {vehicle.make} {vehicle.model}
                 </td>
