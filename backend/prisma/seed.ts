@@ -37,20 +37,16 @@ async function createUsers(): Promise<void> {
   });
 }
 
-async function createAuctionsAndBids(): Promise<void> {
-  const existingAuctions = await prisma.auction.count();
+type SeedVehicles = {
+  tesla: { id: string };
+  vw: { id: string };
+  renault: { id: string };
+  bmw: { id: string };
+  hyundai: { id: string };
+  nissan: { id: string };
+};
 
-  if (existingAuctions > 0) {
-    return;
-  }
-
-  const dealers = await prisma.user.findMany({
-    where: { role: Role.DEALER },
-    orderBy: { email: 'asc' },
-  });
-
-  const [dealerA, dealerB, dealerC] = dealers;
-
+async function createVehicles(): Promise<SeedVehicles> {
   const tesla = await prisma.vehicle.upsert({
     where: { vin: '5YJ3E1EA7KF000001' },
     update: {},
@@ -135,7 +131,62 @@ async function createAuctionsAndBids(): Promise<void> {
     },
   });
 
+  const hyundai = await prisma.vehicle.upsert({
+    where: { vin: 'KMH00000000000005' },
+    update: {},
+    create: {
+      vin: 'KMH00000000000005',
+      make: 'Hyundai',
+      model: 'Kona Electric',
+      year: 2022,
+      mileage: 28000,
+      batteryCapacityKwh: 64,
+      batterySoH: 94,
+      rangeKm: 470,
+      registrationDate: new Date('2022-09-12'),
+      condition: 'GOOD',
+      photos: [],
+      city: 'Cologne',
+      country: 'Germany',
+    },
+  });
+
+  const nissan = await prisma.vehicle.upsert({
+    where: { vin: 'JN100000000000006' },
+    update: {},
+    create: {
+      vin: 'JN100000000000006',
+      make: 'Nissan',
+      model: 'Leaf',
+      year: 2021,
+      mileage: 51000,
+      batteryCapacityKwh: 62,
+      batterySoH: 89,
+      rangeKm: 360,
+      registrationDate: new Date('2021-04-08'),
+      condition: 'GOOD',
+      photos: [],
+      city: 'Frankfurt',
+      country: 'Germany',
+    },
+  });
+
+  return { tesla, vw, renault, bmw, hyundai, nissan };
+}
+
+type SeedAuctions = {
+  draftAuction: { id: string };
+  scheduledAuction: { id: string };
+  activeAuction: { id: string };
+  pendingReviewAuction: { id: string };
+  unsoldAuction: { id: string };
+  completedAuction: { id: string };
+  cancelledAuction: { id: string };
+};
+
+async function createAuctions(vehicles: SeedVehicles): Promise<SeedAuctions> {
   const now = new Date();
+
   const activeStart = new Date(now);
   activeStart.setDate(activeStart.getDate() - 1);
   const activeEnd = new Date(now);
@@ -146,31 +197,20 @@ async function createAuctionsAndBids(): Promise<void> {
   const scheduledEnd = new Date(scheduledStart);
   scheduledEnd.setDate(scheduledEnd.getDate() + 3);
 
-  const completedStart = new Date('2026-07-01T10:00:00');
-  const completedEnd = new Date('2026-07-05T10:00:00');
   const pendingReviewStart = new Date('2026-06-10T10:00:00');
   const pendingReviewEnd = new Date('2026-06-14T10:00:00');
+  const completedStart = new Date('2026-07-01T10:00:00');
+  const completedEnd = new Date('2026-07-05T10:00:00');
 
-  const activeAuction = await prisma.auction.create({
+  const draftAuction = await prisma.auction.create({
     data: {
-      vehicleId: tesla.id,
-      status: AuctionStatus.LIVE,
-      startsAt: activeStart,
-      endsAt: activeEnd,
-      reservePrice: 25000,
-      minIncrement: 250,
+      vehicleId: vehicles.vw.id,
     } as never,
   });
 
-  await prisma.auction.create({
+  const scheduledAuction = await prisma.auction.create({
     data: {
-      vehicleId: vw.id,
-    } as never,
-  });
-
-  await prisma.auction.create({
-    data: {
-      vehicleId: bmw.id,
+      vehicleId: vehicles.bmw.id,
       status: AuctionStatus.SCHEDULED,
       startsAt: scheduledStart,
       endsAt: scheduledEnd,
@@ -179,9 +219,43 @@ async function createAuctionsAndBids(): Promise<void> {
     } as never,
   });
 
+  const activeAuction = await prisma.auction.create({
+    data: {
+      vehicleId: vehicles.tesla.id,
+      status: AuctionStatus.LIVE,
+      startsAt: activeStart,
+      endsAt: activeEnd,
+      reservePrice: 25000,
+      minIncrement: 250,
+    } as never,
+  });
+
+  const pendingReviewAuction = await prisma.auction.create({
+    data: {
+      vehicleId: vehicles.vw.id,
+      status: AuctionStatus.ENDED,
+      startsAt: pendingReviewStart,
+      endsAt: pendingReviewEnd,
+      reservePrice: 22000,
+      minIncrement: 300,
+    } as never,
+  });
+
+  const unsoldAuction = await prisma.auction.create({
+    data: {
+      vehicleId: vehicles.nissan.id,
+      status: AuctionStatus.ENDED,
+      startsAt: new Date('2026-05-10T10:00:00'),
+      endsAt: new Date('2026-05-14T10:00:00'),
+      reservePrice: 18000,
+      minIncrement: 250,
+      result: AuctionResult.UNSOLD,
+    } as never,
+  });
+
   const completedAuction = await prisma.auction.create({
     data: {
-      vehicleId: renault.id,
+      vehicleId: vehicles.renault.id,
       status: AuctionStatus.ENDED,
       startsAt: completedStart,
       endsAt: completedEnd,
@@ -191,20 +265,40 @@ async function createAuctionsAndBids(): Promise<void> {
     } as never,
   });
 
-  const pendingReviewAuction = await prisma.auction.create({
+  const cancelledAuction = await prisma.auction.create({
     data: {
-      vehicleId: vw.id,
-      status: AuctionStatus.ENDED,
-      startsAt: pendingReviewStart,
-      endsAt: pendingReviewEnd,
-      reservePrice: 22000,
-      minIncrement: 300,
+      vehicleId: vehicles.hyundai.id,
+      status: AuctionStatus.CANCELLED,
+      startsAt: new Date('2026-06-20T10:00:00'),
+      endsAt: new Date('2026-06-23T10:00:00'),
+      reservePrice: 27000,
+      minIncrement: 250,
     } as never,
   });
 
+  return {
+    draftAuction,
+    scheduledAuction,
+    activeAuction,
+    pendingReviewAuction,
+    unsoldAuction,
+    completedAuction,
+    cancelledAuction,
+  };
+}
+
+async function createBids(
+  dealerA: { id: string },
+  dealerB: { id: string },
+  dealerC: { id: string },
+  auctions: SeedAuctions,
+): Promise<void> {
+  const now = new Date();
+
+  // Active auction — bids in chronological order
   await prisma.bid.create({
     data: {
-      auctionId: activeAuction.id,
+      auctionId: auctions.activeAuction.id,
       dealerId: dealerC.id,
       amount: 26900,
       createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000),
@@ -213,7 +307,7 @@ async function createAuctionsAndBids(): Promise<void> {
 
   await prisma.bid.create({
     data: {
-      auctionId: activeAuction.id,
+      auctionId: auctions.activeAuction.id,
       dealerId: dealerB.id,
       amount: 27250,
       createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
@@ -222,16 +316,17 @@ async function createAuctionsAndBids(): Promise<void> {
 
   await prisma.bid.create({
     data: {
-      auctionId: activeAuction.id,
+      auctionId: auctions.activeAuction.id,
       dealerId: dealerA.id,
       amount: 27500,
       createdAt: new Date(now.getTime() - 30 * 60 * 1000),
     },
   });
 
+  // Pending review auction — bids in chronological order
   await prisma.bid.create({
     data: {
-      auctionId: pendingReviewAuction.id,
+      auctionId: auctions.pendingReviewAuction.id,
       dealerId: dealerB.id,
       amount: 21400,
       createdAt: new Date('2026-06-12T12:00:00'),
@@ -240,35 +335,72 @@ async function createAuctionsAndBids(): Promise<void> {
 
   await prisma.bid.create({
     data: {
-      auctionId: pendingReviewAuction.id,
+      auctionId: auctions.pendingReviewAuction.id,
       dealerId: dealerC.id,
       amount: 22800,
       createdAt: new Date('2026-06-13T14:00:00'),
     },
   });
 
-  const winningBid = await prisma.bid.create({
+  await prisma.bid.create({
     data: {
-      auctionId: completedAuction.id,
-      dealerId: dealerA.id,
-      amount: 18200,
-      createdAt: new Date('2026-07-04T14:00:00'),
+      auctionId: auctions.pendingReviewAuction.id,
+      dealerId: dealerB.id,
+      amount: 23100,
+      createdAt: new Date('2026-06-14T08:30:00'),
     },
   });
 
+  // Completed (sold) auction — bids in chronological order
   await prisma.bid.create({
     data: {
-      auctionId: completedAuction.id,
+      auctionId: auctions.completedAuction.id,
       dealerId: dealerB.id,
       amount: 17800,
       createdAt: new Date('2026-07-04T12:00:00'),
     },
   });
 
+  const winningBid = await prisma.bid.create({
+    data: {
+      auctionId: auctions.completedAuction.id,
+      dealerId: dealerA.id,
+      amount: 18200,
+      createdAt: new Date('2026-07-04T14:00:00'),
+    },
+  });
+
   await prisma.auction.update({
-    where: { id: completedAuction.id },
+    where: { id: auctions.completedAuction.id },
     data: { winningBidId: winningBid.id },
   });
+
+  // Cancelled auction
+  await prisma.bid.create({
+    data: {
+      auctionId: auctions.cancelledAuction.id,
+      dealerId: dealerB.id,
+      amount: 17200,
+      createdAt: new Date('2026-05-13T15:00:00'),
+    },
+  });
+}
+
+async function createAuctionsAndBids(): Promise<void> {
+  const existingAuctions = await prisma.auction.count();
+
+  if (existingAuctions > 0) {
+    return;
+  }
+
+  const [dealerA, dealerB, dealerC] = await prisma.user.findMany({
+    where: { role: Role.DEALER },
+    orderBy: { email: 'asc' },
+  });
+
+  const vehicles = await createVehicles();
+  const auctions = await createAuctions(vehicles);
+  await createBids(dealerA, dealerB, dealerC, auctions);
 }
 
 async function main() {
