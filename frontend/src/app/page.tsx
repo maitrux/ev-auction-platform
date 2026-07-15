@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (res.user.role === "ADMIN") {
         router.push("/admin");
       } else if (res.user.role === "DEALER") {
-        router.push("/auctions");
+        router.push("/dealer");
       }
     } catch (error) {
       if (error instanceof Error) {

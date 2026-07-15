@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 const ROUTE_ROLES: Record<string, UserRole[]> = {
   "/admin": ["ADMIN"],
-  "/auctions": ["DEALER"],
+  "/dealer": ["DEALER"],
 };
 
 export async function proxy(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
 
   // Authenticated but wrong role -> send to their own area
   if (!requiredRoles.includes(session.role)) {
-    const redirectUrl = session.role === "ADMIN" ? "/admin" : "/auctions";
+    const redirectUrl = session.role === "ADMIN" ? "/admin" : "/dealer";
 
     return NextResponse.redirect(new URL(redirectUrl, request.url));
   }

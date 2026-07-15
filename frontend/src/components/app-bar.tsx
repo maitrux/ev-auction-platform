@@ -59,8 +59,12 @@ export function AppBar({ user }: AppBarProps) {
         ]
       : [
           {
-            href: "/auctions",
+            href: "/dealer/auctions",
             label: "Auctions",
+          },
+          {
+            href: "/dealer/bids",
+            label: "My Bids",
           },
         ];
 
