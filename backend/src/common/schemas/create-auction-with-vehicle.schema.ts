@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isInPast } from '../validation/date-validation';
 import { createVehicleSchema } from './create-vehicle.schema';
 
 const auctionFieldsSchema = z.object({
@@ -35,6 +36,24 @@ export const createAuctionWithVehicleSchema = z
       ctx.addIssue({
         code: 'custom',
         message: 'End date must be after start date',
+        path: ['auction', 'endsAt'],
+      });
+    }
+
+    const now = new Date();
+
+    if (isInPast(result.data.startsAt, now)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Start date cannot be in the past',
+        path: ['auction', 'startsAt'],
+      });
+    }
+
+    if (isInPast(result.data.endsAt, now)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'End date cannot be in the past',
         path: ['auction', 'endsAt'],
       });
     }

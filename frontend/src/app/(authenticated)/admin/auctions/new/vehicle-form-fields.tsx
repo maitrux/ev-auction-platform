@@ -1,4 +1,5 @@
 import type { VehicleFormErrors } from "@/lib/vehicle-form-validation";
+import { getMaxDateInputValue } from "@/lib/format";
 import type { VehicleFormState } from "@/types";
 
 function fieldClassName(hasError: boolean) {
@@ -29,6 +30,8 @@ function Input({
   onChange,
   type = "text",
   error,
+  min,
+  max,
 }: {
   label: string;
   name: string;
@@ -36,6 +39,8 @@ function Input({
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   type?: string;
   error?: string;
+  min?: string | number;
+  max?: string | number;
 }) {
   const errorId = `${name}-error`;
 
@@ -54,6 +59,8 @@ function Input({
         type={type}
         value={value}
         onChange={onChange}
+        min={min}
+        max={max}
         className={fieldClassName(Boolean(error))}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
@@ -171,6 +178,9 @@ export function VehicleFormFields({
   fieldErrors,
   onChange,
 }: VehicleFormFieldsProps) {
+  const maxYear = new Date().getFullYear();
+  const maxRegistrationDate = getMaxDateInputValue();
+
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
@@ -204,6 +214,7 @@ export function VehicleFormFields({
           type="number"
           value={form.year}
           onChange={onChange}
+          max={maxYear}
           error={fieldErrors.year}
         />
 
@@ -249,6 +260,7 @@ export function VehicleFormFields({
           type="date"
           value={form.registrationDate}
           onChange={onChange}
+          max={maxRegistrationDate}
           error={fieldErrors.registrationDate}
         />
 

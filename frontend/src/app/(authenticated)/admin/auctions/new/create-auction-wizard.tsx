@@ -16,6 +16,11 @@ import {
   type AuctionFormState,
   type VehicleFormState,
 } from "@/types";
+import {
+  getMinDatetimeLocalValue,
+  getMinEndDatetimeLocalValue,
+  toDatetimeLocalValue,
+} from "@/lib/format";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -73,21 +78,16 @@ export function CreateAuctionWizard() {
     useState<AuctionFormErrors>({});
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  function formatDateTimeLocal(date: Date): string {
-    const offset = date.getTimezoneOffset();
-    const local = new Date(date.getTime() - offset * 60_000);
-
-    return local.toISOString().slice(0, 16);
-  }
+  const minStartDateTime = getMinDatetimeLocalValue();
+  const minEndDateTime = getMinEndDatetimeLocalValue(auctionForm.startsAt);
 
   function createInitialAuctionForm(): AuctionFormState {
     const startsAt = new Date();
     const endsAt = new Date(startsAt.getTime() + 24 * 60 * 60 * 1000);
 
     return {
-      startsAt: formatDateTimeLocal(startsAt),
-      endsAt: formatDateTimeLocal(endsAt),
+      startsAt: toDatetimeLocalValue(startsAt),
+      endsAt: toDatetimeLocalValue(endsAt),
       reservePrice: "",
       minIncrement: "250",
     };
@@ -146,7 +146,7 @@ export function CreateAuctionWizard() {
 
         if (!Number.isNaN(start.getTime())) {
           const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-          next.endsAt = formatDateTimeLocal(end);
+          next.endsAt = toDatetimeLocalValue(end);
         }
       }
 
@@ -300,6 +300,7 @@ export function CreateAuctionWizard() {
                 name="startsAt"
                 type="datetime-local"
                 value={auctionForm.startsAt}
+                min={minStartDateTime}
                 onChange={handleAuctionChange}
                 className={fieldClassName(Boolean(auctionFieldErrors.startsAt))}
                 aria-invalid={Boolean(auctionFieldErrors.startsAt)}
@@ -322,6 +323,7 @@ export function CreateAuctionWizard() {
                 name="endsAt"
                 type="datetime-local"
                 value={auctionForm.endsAt}
+                min={minEndDateTime}
                 onChange={handleAuctionChange}
                 className={fieldClassName(Boolean(auctionFieldErrors.endsAt))}
                 aria-invalid={Boolean(auctionFieldErrors.endsAt)}

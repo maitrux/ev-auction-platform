@@ -23,17 +23,22 @@ function parseRequiredNumber(
 
 export function validateAuctionForm(form: AuctionFormState): AuctionFormErrors {
   const errors: AuctionFormErrors = {};
+  const now = new Date();
 
   if (!form.startsAt) {
     errors.startsAt = "Start date is required";
   } else if (Number.isNaN(new Date(form.startsAt).getTime())) {
     errors.startsAt = "Start date is invalid";
+  } else if (new Date(form.startsAt) < now) {
+    errors.startsAt = "Start date cannot be in the past";
   }
 
   if (!form.endsAt) {
     errors.endsAt = "End date is required";
   } else if (Number.isNaN(new Date(form.endsAt).getTime())) {
     errors.endsAt = "End date is invalid";
+  } else if (new Date(form.endsAt) < now) {
+    errors.endsAt = "End date cannot be in the past";
   }
 
   if (

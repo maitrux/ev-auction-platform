@@ -16,6 +16,8 @@ import {
   formatCurrency,
   formatDateTime,
   formatNumber,
+  getMinDatetimeLocalValue,
+  getMinEndDatetimeLocalValue,
   toDatetimeLocalValue,
 } from "@/lib/format";
 import {
@@ -38,20 +40,65 @@ function fieldClassName(hasError: boolean) {
     : "w-full rounded border px-3 py-2 focus:border-blue-500 focus:outline-none";
 }
 
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p
+      id={id}
+      className="mt-1 text-sm text-red-600"
+    >
+      {message}
+    </p>
+  );
+}
+
 export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPublishForm, setShowPublishForm] = useState(false);
-  const [publishForm, setPublishForm] = useState({
-    startsAt: auction.startsAt ? toDatetimeLocalValue(auction.startsAt) : "",
-    endsAt: auction.endsAt ? toDatetimeLocalValue(auction.endsAt) : "",
-    reservePrice:
-      auction.reservePrice != null ? String(auction.reservePrice) : "",
-    minIncrement:
-      auction.minIncrement != null ? String(auction.minIncrement) : "",
-  });
+  function getInitialPublishForm() {
+    return {
+      startsAt: auction.startsAt ? toDatetimeLocalValue(auction.startsAt) : "",
+      endsAt: auction.endsAt ? toDatetimeLocalValue(auction.endsAt) : "",
+      reservePrice:
+        auction.reservePrice != null ? String(auction.reservePrice) : "",
+      minIncrement:
+        auction.minIncrement != null ? String(auction.minIncrement) : "",
+    };
+  }
+
+  const [publishForm, setPublishForm] = useState(getInitialPublishForm);
   const [publishErrors, setPublishErrors] = useState<AuctionFormErrors>({});
+  const minStartDateTime = getMinDatetimeLocalValue();
+  const minEndDateTime = getMinEndDatetimeLocalValue(publishForm.startsAt);
+
+  function clearPublishFieldError(name: keyof typeof publishForm) {
+    setPublishErrors((current) => {
+      if (!(name in current) || !current[name as keyof AuctionFormErrors]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[name as keyof AuctionFormErrors];
+      return next;
+    });
+    setError("");
+  }
+
+  function handlePublishFieldChange(
+    name: keyof typeof publishForm,
+    value: string,
+  ) {
+    setPublishForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+    clearPublishFieldError(name);
+  }
 
   const status = formatAuctionStatus(auction.status);
   const shortId = auction.id.slice(0, 8);
@@ -151,6 +198,13 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
     router.refresh();
   }
 
+  function handleCancelPublish() {
+    setShowPublishForm(false);
+    setError("");
+    setPublishErrors({});
+    setPublishForm(getInitialPublishForm());
+  }
+
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6">
@@ -161,15 +215,6 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
           ← Back to auctions
         </Link>
       </div>
-
-      {error && (
-        <div
-          className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"
-          role="alert"
-        >
-          {error}
-        </div>
-      )}
 
       <div>
         <ImageCarousel
@@ -278,6 +323,14 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
         {showPublishForm && (
           <div className="mt-4 border-t pt-4">
             <h3 className="mb-3 text-sm font-medium">Publish auction</h3>
+            {error && (
+              <div
+                className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
@@ -291,13 +344,21 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                   name="startsAt"
                   type="datetime-local"
                   value={publishForm.startsAt}
+                  min={minStartDateTime}
                   onChange={(event) =>
-                    setPublishForm((current) => ({
-                      ...current,
-                      startsAt: event.target.value,
-                    }))
+                    handlePublishFieldChange("startsAt", event.target.value)
                   }
                   className={fieldClassName(Boolean(publishErrors.startsAt))}
+                  aria-invalid={Boolean(publishErrors.startsAt)}
+                  aria-describedby={
+                    publishErrors.startsAt
+                      ? "publish-startsAt-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-startsAt-error"
+                  message={publishErrors.startsAt}
                 />
               </div>
               <div>
@@ -312,13 +373,19 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                   name="endsAt"
                   type="datetime-local"
                   value={publishForm.endsAt}
+                  min={minEndDateTime}
                   onChange={(event) =>
-                    setPublishForm((current) => ({
-                      ...current,
-                      endsAt: event.target.value,
-                    }))
+                    handlePublishFieldChange("endsAt", event.target.value)
                   }
                   className={fieldClassName(Boolean(publishErrors.endsAt))}
+                  aria-invalid={Boolean(publishErrors.endsAt)}
+                  aria-describedby={
+                    publishErrors.endsAt ? "publish-endsAt-error" : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-endsAt-error"
+                  message={publishErrors.endsAt}
                 />
               </div>
               <div>
@@ -334,14 +401,21 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                   type="number"
                   value={publishForm.reservePrice}
                   onChange={(event) =>
-                    setPublishForm((current) => ({
-                      ...current,
-                      reservePrice: event.target.value,
-                    }))
+                    handlePublishFieldChange("reservePrice", event.target.value)
                   }
                   className={fieldClassName(
                     Boolean(publishErrors.reservePrice),
                   )}
+                  aria-invalid={Boolean(publishErrors.reservePrice)}
+                  aria-describedby={
+                    publishErrors.reservePrice
+                      ? "publish-reservePrice-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-reservePrice-error"
+                  message={publishErrors.reservePrice}
                 />
               </div>
               <div>
@@ -357,14 +431,21 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                   type="number"
                   value={publishForm.minIncrement}
                   onChange={(event) =>
-                    setPublishForm((current) => ({
-                      ...current,
-                      minIncrement: event.target.value,
-                    }))
+                    handlePublishFieldChange("minIncrement", event.target.value)
                   }
                   className={fieldClassName(
                     Boolean(publishErrors.minIncrement),
                   )}
+                  aria-invalid={Boolean(publishErrors.minIncrement)}
+                  aria-describedby={
+                    publishErrors.minIncrement
+                      ? "publish-minIncrement-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-minIncrement-error"
+                  message={publishErrors.minIncrement}
                 />
               </div>
             </div>
@@ -379,7 +460,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setShowPublishForm(false)}
+                onClick={handleCancelPublish}
                 disabled={isSubmitting}
                 className="rounded border px-4 py-2 text-sm disabled:opacity-50"
               >

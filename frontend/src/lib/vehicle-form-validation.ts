@@ -69,11 +69,14 @@ export function validateVehicleForm(form: VehicleFormState): VehicleFormErrors {
   }
 
   const year = parseRequiredInt(form.year, "Year");
+  const currentYear = new Date().getFullYear();
 
   if (year.error) {
     errors.year = year.error;
   } else if (year.value! < 1886) {
     errors.year = "Year must be 1886 or later";
+  } else if (year.value! > currentYear) {
+    errors.year = "Year cannot be in the future";
   }
 
   const mileage = parseRequiredInt(form.mileage, "Mileage");
@@ -115,6 +118,14 @@ export function validateVehicleForm(form: VehicleFormState): VehicleFormErrors {
     errors.registrationDate = "Registration date is required";
   } else if (Number.isNaN(new Date(form.registrationDate).getTime())) {
     errors.registrationDate = "Registration date is invalid";
+  } else {
+    const registrationDate = new Date(`${form.registrationDate}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (registrationDate > today) {
+      errors.registrationDate = "Registration date cannot be in the future";
+    }
   }
 
   if (!form.city.trim()) {
@@ -156,12 +167,12 @@ const backendFieldMessages: Record<string, string> = {
   vin: "VIN must be exactly 17 characters",
   make: "Make is required",
   model: "Model is required",
-  year: "Year must be 1886 or later",
+  year: "Year must be 1886 or later and cannot be in the future",
   mileage: "Mileage must be 0 or greater",
   batteryCapacityKwh: "Battery capacity must be greater than 0",
   batterySoH: "Battery SoH must be between 0 and 100",
   rangeKm: "Range must be greater than 0",
-  registrationDate: "Registration date is invalid",
+  registrationDate: "Registration date is invalid or in the future",
   photos: "Each photo must be a valid URL",
   city: "City is required",
   country: "Country is required",
