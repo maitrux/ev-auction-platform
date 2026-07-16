@@ -1,35 +1,38 @@
 import { AuctionResult, Role } from '@prisma/client';
 import 'dotenv/config';
 import { AuctionStatus } from '../src/common/constants/auction-status';
+import { hashPassword } from '../src/common/utils/password';
 import { createPrismaClient } from '../src/prisma/create-prisma-client';
 
 const prisma = createPrismaClient();
 
 async function createUsers(): Promise<void> {
+  const passwordHash = await hashPassword('password123');
+
   await prisma.user.createMany({
     skipDuplicates: true,
     data: [
       {
         email: 'admin@aampere.com',
-        passwordHash: 'password123',
+        passwordHash,
         role: Role.ADMIN,
         name: 'Aampere Admin',
       },
       {
         email: 'dealer1@example.com',
-        passwordHash: 'password123',
+        passwordHash,
         role: Role.DEALER,
         name: 'Dealer One',
       },
       {
         email: 'dealer2@example.com',
-        passwordHash: 'password123',
+        passwordHash,
         role: Role.DEALER,
         name: 'Dealer Two',
       },
       {
         email: 'dealer3@example.com',
-        passwordHash: 'password123',
+        passwordHash,
         role: Role.DEALER,
         name: 'Dealer Three',
       },

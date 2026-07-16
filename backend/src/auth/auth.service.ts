@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { type PublicUser } from '../common/schemas/user.schema';
+import { comparePassword } from '../common/utils/password';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -20,7 +21,10 @@ export class AuthService {
       },
     });
 
-    if (!user || user.passwordHash !== password) {
+    const passwordMatches =
+      user && (await comparePassword(password, user.passwordHash));
+
+    if (!passwordMatches) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
