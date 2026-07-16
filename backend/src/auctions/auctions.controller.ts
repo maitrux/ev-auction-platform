@@ -5,12 +5,9 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../auth/roles.decorator';
-import { RolesGuard } from '../auth/roles.guard';
-import { UserRole } from '../common/constants/user-role';
 import {
   createAuctionWithVehicleSchema,
   type CreateAuctionWithVehicleInput,
@@ -19,7 +16,12 @@ import {
   updateAuctionSchema,
   type UpdateAuctionInput,
 } from 'src/common/schemas/update-auction.schema';
+import type { AuthenticatedRequest } from 'src/common/types/authenticated-request';
 import { ZodValidationPipe } from 'src/common/zod-validation.pipe';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { UserRole } from '../common/constants/user-role';
 import { AuctionsService } from './auctions.service';
 
 @Controller('auctions')
@@ -37,6 +39,15 @@ export class AuctionsController {
   @Roles(UserRole.DEALER)
   findOpenForDealer() {
     return this.auctionsService.findOpenForDealer();
+  }
+
+  @Get('open/:id')
+  @Roles(UserRole.DEALER)
+  findOneForDealer(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.auctionsService.findOneForDealer(id, request.user.id);
   }
 
   @Get(':id')

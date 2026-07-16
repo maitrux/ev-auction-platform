@@ -66,6 +66,23 @@ export type DealerAuctionListRecord = Prisma.AuctionGetPayload<{
   include: typeof dealerAuctionListInclude;
 }>;
 
+export const dealerAuctionDetailInclude = {
+  vehicle: true,
+  bids: {
+    select: {
+      id: true,
+      amount: true,
+      createdAt: true,
+      dealerId: true,
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
+} satisfies Prisma.AuctionInclude;
+
+export type DealerAuctionDetailRecord = Prisma.AuctionGetPayload<{
+  include: typeof dealerAuctionDetailInclude;
+}>;
+
 export type AuctionDetailRecord = Prisma.AuctionGetPayload<{
   include: typeof auctionDetailInclude;
 }>;

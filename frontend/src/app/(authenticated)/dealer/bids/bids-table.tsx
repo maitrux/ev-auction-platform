@@ -13,7 +13,8 @@ import {
 } from "@/lib/format";
 import type { Bid } from "@/types/bid";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface BidsTableProps {
   bids: Bid[];
@@ -75,23 +76,77 @@ function BidHistoryPopover({
   bids: Bid[];
   vehicleLabel: string;
 }) {
-  return (
-    <span
-      className="group/history relative inline-flex"
-      onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        aria-label={`View bid history for ${vehicleLabel}`}
-      >
-        <HistoryIcon />
-      </button>
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
 
+  function clearCloseTimeout() {
+    if (closeTimeoutRef.current != null) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }
+
+  function updatePosition() {
+    const button = buttonRef.current;
+
+    if (!button) {
+      return;
+    }
+
+    const rect = button.getBoundingClientRect();
+    const popoverWidth = 256;
+    const left = Math.min(
+      Math.max(8, rect.right - popoverWidth),
+      window.innerWidth - popoverWidth - 8,
+    );
+
+    setPosition({
+      top: rect.bottom + 8,
+      left,
+    });
+  }
+
+  function show() {
+    clearCloseTimeout();
+    updatePosition();
+    setOpen(true);
+  }
+
+  function scheduleClose() {
+    clearCloseTimeout();
+    closeTimeoutRef.current = window.setTimeout(() => setOpen(false), 100);
+  }
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handleReposition() {
+      updatePosition();
+    }
+
+    window.addEventListener("scroll", handleReposition, true);
+    window.addEventListener("resize", handleReposition);
+
+    return () => {
+      window.removeEventListener("scroll", handleReposition, true);
+      window.removeEventListener("resize", handleReposition);
+    };
+  }, [open]);
+
+  const popover =
+    open && position ? (
       <div
         role="tooltip"
-        className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 w-64 rounded-lg border border-gray-200 bg-white p-3 text-left opacity-0 shadow-lg transition-opacity group-focus-within/history:pointer-events-auto group-focus-within/history:opacity-100 group-hover/history:pointer-events-auto group-hover/history:opacity-100"
+        style={{ top: position.top, left: position.left }}
+        className="fixed z-50 w-64 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-lg"
+        onMouseEnter={clearCloseTimeout}
+        onMouseLeave={scheduleClose}
       >
         <p className="mb-2 text-xs font-medium text-gray-500">Bid history</p>
         <ul className="space-y-2">
@@ -115,7 +170,28 @@ function BidHistoryPopover({
           ))}
         </ul>
       </div>
-    </span>
+    ) : null;
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        aria-label={`View bid history for ${vehicleLabel}`}
+        onClick={(event) => event.stopPropagation()}
+        onMouseEnter={show}
+        onMouseLeave={scheduleClose}
+        onFocus={show}
+        onBlur={scheduleClose}
+      >
+        <HistoryIcon />
+      </button>
+
+      {typeof document !== "undefined" && popover
+        ? createPortal(popover, document.body)
+        : null}
+    </>
   );
 }
 
@@ -195,14 +271,16 @@ export function BidsTable({ bids }: BidsTableProps) {
                     "-"
                   )}
                 </td>
-                <td className="overflow-visible px-4 py-3">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <span>{formatCurrency(latestBid.amount)}</span>
                     {hasHistory ? (
-                      <BidHistoryPopover
-                        bids={group.bids}
-                        vehicleLabel={vehicleLabel}
-                      />
+                      <span onClick={(event) => event.stopPropagation()}>
+                        <BidHistoryPopover
+                          bids={group.bids}
+                          vehicleLabel={vehicleLabel}
+                        />
+                      </span>
                     ) : null}
                   </div>
                 </td>

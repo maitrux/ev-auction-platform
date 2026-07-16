@@ -41,6 +41,19 @@ export interface DealerAuctionListItem {
   };
 }
 
+export interface DealerAuctionDetail {
+  id: string;
+  status: AuctionStatus;
+  startsAt: string | null;
+  endsAt: string | null;
+  vehicle: Vehicle;
+  myBid: {
+    amount: number;
+    createdAt: string;
+  } | null;
+  minNextBid: number | null;
+}
+
 export interface AuctionBid {
   id: string;
   amount: number;

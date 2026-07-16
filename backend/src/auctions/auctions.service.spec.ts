@@ -1,9 +1,10 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuctionOutcome } from '../common/constants/auction-outcome';
 import { AuctionResult } from '../common/constants/auction-result';
 import { AuctionStatus } from '../common/constants/auction-status';
 import { PrismaService } from '../prisma/prisma.service';
+import { auctionDetailInclude } from './auction.types';
 import { AuctionsService } from './auctions.service';
 
 describe('AuctionsService', () => {
@@ -143,9 +144,89 @@ describe('AuctionsService', () => {
     });
   });
 
-  describe('confirmOutcome via update', () => {
-    const auctionDetailInclude = expect.any(Object);
+  describe('findOneForDealer', () => {
+    function buildDealerDetailAuction(overrides: Record<string, unknown> = {}) {
+      return {
+        id: 'auction-1',
+        status: AuctionStatus.LIVE,
+        startsAt: new Date('2026-07-14T12:00:00.000Z'),
+        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        minIncrement: 250,
+        reservePrice: 42000,
+        result: null,
+        vehicle: {
+          id: 'vehicle-1',
+          vin: 'VIN123456789012345',
+          make: 'Tesla',
+          model: 'Model 3',
+          year: 2022,
+          mileage: 25000,
+          batteryCapacityKwh: 75,
+          batterySoH: 94,
+          rangeKm: 500,
+          registrationDate: new Date('2022-01-01'),
+          condition: 'GOOD',
+          conditionNotes: null,
+          photos: [],
+          city: 'Munich',
+          country: 'Germany',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        bids: [
+          {
+            id: 'bid-1',
+            amount: 27250,
+            createdAt: new Date('2026-07-14T11:00:00.000Z'),
+            dealerId: 'dealer-1',
+          },
+          {
+            id: 'bid-2',
+            amount: 26900,
+            createdAt: new Date('2026-07-14T10:00:00.000Z'),
+            dealerId: 'dealer-2',
+          },
+        ],
+        ...overrides,
+      };
+    }
 
+    it('returns dealer-safe auction detail with my bid and minNextBid', async () => {
+      const auction = buildDealerDetailAuction();
+      prisma.auction.findUnique.mockResolvedValue(auction);
+
+      const result = await service.findOneForDealer('auction-1', 'dealer-1');
+
+      expect(result).toEqual({
+        id: 'auction-1',
+        status: AuctionStatus.LIVE,
+        startsAt: new Date('2026-07-14T12:00:00.000Z'),
+        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        vehicle: auction.vehicle,
+        myBid: {
+          amount: 27250,
+          createdAt: new Date('2026-07-14T11:00:00.000Z'),
+        },
+        minNextBid: 27500,
+      });
+      expect(result).not.toHaveProperty('reservePrice');
+      expect(result).not.toHaveProperty('minIncrement');
+      expect(result).not.toHaveProperty('highestBid');
+      expect(result).not.toHaveProperty('bids');
+    });
+
+    it('hides draft auctions from dealers', async () => {
+      prisma.auction.findUnique.mockResolvedValue(
+        buildDealerDetailAuction({ status: AuctionStatus.DRAFT }),
+      );
+
+      await expect(
+        service.findOneForDealer('auction-1', 'dealer-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('confirmOutcome via update', () => {
     function buildEndedAuction(overrides: Record<string, unknown> = {}) {
       return {
         id: 'auction-ended',

@@ -1,11 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { AuctionStatus } from 'src/common/constants/auction-status';
+import { DealerAuctionOutcome } from 'src/common/constants/dealer-auction-outcome';
+import type { CreateBidInput } from 'src/common/schemas/create-bid.schema';
+import { getEffectiveAuctionStatus } from '../auctions/auction-status';
 import {
   didDealerWinBid,
   getDealerAuctionOutcome,
 } from '../auctions/dealer-auction-outcome';
-import { getEffectiveAuctionStatus } from '../auctions/auction-status';
-import { DealerAuctionOutcome } from '../common/constants/dealer-auction-outcome';
 import { PrismaService } from '../prisma/prisma.service';
+import type { CreatedBid } from './bid.types';
+import { getBidAmountError } from './bid-validation';
 
 @Injectable()
 export class BidsService {
@@ -60,5 +68,53 @@ export class BidsService {
         },
       };
     });
+  }
+
+  async create(dealerId: string, input: CreateBidInput): Promise<CreatedBid> {
+    const auction = await this.prisma.auction.findUnique({
+      where: { id: input.auctionId },
+      include: {
+        bids: {
+          select: {
+            amount: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    const effectiveStatus = getEffectiveAuctionStatus(auction);
+
+    if (effectiveStatus !== AuctionStatus.LIVE) {
+      throw new BadRequestException('Bids can only be placed on live auctions');
+    }
+
+    const amountError = getBidAmountError(
+      input.amount,
+      auction.bids,
+      auction.minIncrement,
+    );
+
+    if (amountError) {
+      throw new BadRequestException(amountError);
+    }
+
+    const bid = await this.prisma.bid.create({
+      data: {
+        auctionId: input.auctionId,
+        dealerId,
+        amount: input.amount,
+      },
+    });
+
+    return {
+      id: bid.id,
+      amount: bid.amount,
+      createdAt: bid.createdAt,
+    };
   }
 }

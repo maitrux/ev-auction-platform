@@ -1,19 +1,17 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import type { Request } from 'express';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRole } from 'src/common/constants/user-role';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  createBidSchema,
+  type CreateBidInput,
+} from 'src/common/schemas/create-bid.schema';
+import type { AuthenticatedRequest } from 'src/common/types/authenticated-request';
+import { ZodValidationPipe } from 'src/common/zod-validation.pipe';
+import type { CreatedBid } from './bid.types';
 import { BidsService } from './bids.service';
-
-interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-    email: string;
-    role: 'ADMIN' | 'DEALER';
-  };
-}
 
 @Controller('bids')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,5 +22,13 @@ export class BidsController {
   @Get('me')
   getMyBids(@Req() request: AuthenticatedRequest) {
     return this.bidsService.findByDealer(request.user.id);
+  }
+
+  @Post()
+  create(
+    @Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(createBidSchema)) body: CreateBidInput,
+  ): Promise<CreatedBid> {
+    return this.bidsService.create(request.user.id, body);
   }
 }

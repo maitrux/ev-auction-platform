@@ -4,13 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Vehicle } from '@prisma/client';
-import { AuctionResult } from 'src/common/constants/auction-result';
 import { AuctionOutcome } from 'src/common/constants/auction-outcome';
+import { AuctionResult } from 'src/common/constants/auction-result';
 import type { AuctionStatus as AuctionStatusType } from 'src/common/constants/auction-status';
 import { AuctionStatus } from 'src/common/constants/auction-status';
 import type { CreateAuctionWithVehicleInput } from 'src/common/schemas/create-auction-with-vehicle.schema';
 import type { UpdateAuctionInput } from 'src/common/schemas/update-auction.schema';
 import { throwIfDuplicateVin } from 'src/common/utils/prisma-errors';
+import { getMinNextBid } from '../bids/bid-validation';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   findHighestBid,
@@ -24,9 +25,11 @@ import {
 import {
   auctionDetailInclude,
   auctionListInclude,
+  dealerAuctionDetailInclude,
   dealerAuctionListInclude,
   type AuctionDetailRecord,
   type AuctionListRecord,
+  type DealerAuctionDetailRecord,
   type DealerAuctionListRecord,
 } from './auction.types';
 
@@ -83,6 +86,28 @@ export class AuctionsService {
     }
 
     return this.toDetail(auction);
+  }
+
+  async findOneForDealer(id: string, dealerId: string) {
+    const auction = await this.prisma.auction.findUnique({
+      where: { id },
+      include: dealerAuctionDetailInclude,
+    });
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    const effectiveStatus = getEffectiveAuctionStatus(auction);
+
+    if (
+      effectiveStatus === AuctionStatus.DRAFT ||
+      effectiveStatus === AuctionStatus.CANCELLED
+    ) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    return this.toDealerDetail(auction, dealerId, effectiveStatus);
   }
 
   async createWithVehicle(input: CreateAuctionWithVehicleInput) {
@@ -336,6 +361,44 @@ export class AuctionsService {
       startsAt: auction.startsAt,
       endsAt: auction.endsAt,
       vehicle: auction.vehicle,
+    };
+  }
+
+  private toDealerDetail(
+    auction: DealerAuctionDetailRecord,
+    dealerId: string,
+    effectiveStatus: AuctionStatusType,
+  ) {
+    const dealerBids = auction.bids.filter((bid) => bid.dealerId === dealerId);
+    const myHighestBid = dealerBids.reduce<(typeof dealerBids)[number] | null>(
+      (highest, bid) => {
+        if (!highest || bid.amount > highest.amount) {
+          return bid;
+        }
+
+        return highest;
+      },
+      null,
+    );
+
+    const minNextBid =
+      effectiveStatus === AuctionStatus.LIVE
+        ? getMinNextBid(auction.bids, auction.minIncrement)
+        : null;
+
+    return {
+      id: auction.id,
+      status: effectiveStatus,
+      startsAt: auction.startsAt,
+      endsAt: auction.endsAt,
+      vehicle: auction.vehicle,
+      myBid: myHighestBid
+        ? {
+            amount: myHighestBid.amount,
+            createdAt: myHighestBid.createdAt,
+          }
+        : null,
+      minNextBid,
     };
   }
 

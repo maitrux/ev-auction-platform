@@ -8,6 +8,11 @@ type BidForOutcome = {
   createdAt: Date;
 };
 
+type BidForHighest = {
+  amount: number;
+  createdAt: Date;
+};
+
 export function getAuctionOutcome(
   effectiveStatus: AuctionStatus,
   storedResult: string | null,
@@ -27,9 +32,7 @@ export function getAuctionOutcome(
   return AuctionOutcome.PENDING;
 }
 
-export function findHighestBid<T extends BidForOutcome>(
-  bids: T[],
-): T | null {
+export function findHighestBid<T extends BidForHighest>(bids: T[]): T | null {
   if (bids.length === 0) {
     return null;
   }
@@ -39,10 +42,7 @@ export function findHighestBid<T extends BidForOutcome>(
       return bid;
     }
 
-    if (
-      bid.amount === highest.amount &&
-      bid.createdAt < highest.createdAt
-    ) {
+    if (bid.amount === highest.amount && bid.createdAt < highest.createdAt) {
       return bid;
     }
 

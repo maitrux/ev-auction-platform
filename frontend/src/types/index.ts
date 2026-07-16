@@ -15,6 +15,8 @@ export type {
   AuctionOutcome,
   AuctionStatus,
   CreateAuctionWithVehicleInput,
+  DealerAuctionDetail,
+  DealerAuctionListItem,
 } from "./auction";
 export {
   initialAuctionForm,
