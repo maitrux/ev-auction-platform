@@ -205,7 +205,7 @@ describe('AuctionsService', () => {
       };
     }
 
-    it('returns dealer-safe auction detail with my bid and minNextBid', async () => {
+    it('returns dealer-safe auction detail with my bids and minNextBid', async () => {
       const auction = buildDealerDetailAuction();
       prisma.auction.findUnique.mockResolvedValue(auction);
 
@@ -217,10 +217,13 @@ describe('AuctionsService', () => {
         startsAt: new Date('2026-07-14T12:00:00.000Z'),
         endsAt: new Date('2026-07-18T12:00:00.000Z'),
         vehicle: auction.vehicle,
-        myBid: {
-          amount: 27250,
-          createdAt: new Date('2026-07-14T11:00:00.000Z'),
-        },
+        myBids: [
+          {
+            id: 'bid-1',
+            amount: 27250,
+            createdAt: new Date('2026-07-14T11:00:00.000Z'),
+          },
+        ],
         minNextBid: 27500,
       });
       expect(result).not.toHaveProperty('reservePrice');

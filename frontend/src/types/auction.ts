@@ -48,10 +48,11 @@ export interface DealerAuctionDetail {
   startsAt: string | null;
   endsAt: string | null;
   vehicle: Vehicle;
-  myBid: {
+  myBids: {
+    id: string;
     amount: number;
     createdAt: string;
-  } | null;
+  }[];
   minNextBid: number | null;
 }
 

@@ -18,8 +18,8 @@ export function getDealerAuctionBackLink(from?: string): {
   label: string;
 } {
   if (from === DealerAuctionFrom.BIDS) {
-    return { href: "/dealer/bids", label: "← Back to my bids" };
+    return { href: "/dealer/bids", label: "← Back to My Bids" };
   }
 
-  return { href: "/dealer/auctions", label: "← Back to auctions" };
+  return { href: "/dealer/auctions", label: "← Back to Open Auctions" };
 }

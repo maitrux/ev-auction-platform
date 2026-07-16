@@ -371,16 +371,16 @@ export class AuctionsService {
     effectiveStatus: AuctionStatusType,
   ) {
     const dealerBids = auction.bids.filter((bid) => bid.dealerId === dealerId);
-    const myHighestBid = dealerBids.reduce<(typeof dealerBids)[number] | null>(
-      (highest, bid) => {
-        if (!highest || bid.amount > highest.amount) {
-          return bid;
-        }
-
-        return highest;
-      },
-      null,
-    );
+    const myBids = dealerBids
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .map((bid) => ({
+        id: bid.id,
+        amount: bid.amount,
+        createdAt: bid.createdAt,
+      }));
 
     const minNextBid =
       effectiveStatus === AuctionStatus.LIVE
@@ -393,12 +393,7 @@ export class AuctionsService {
       startsAt: auction.startsAt,
       endsAt: auction.endsAt,
       vehicle: auction.vehicle,
-      myBid: myHighestBid
-        ? {
-            amount: myHighestBid.amount,
-            createdAt: myHighestBid.createdAt,
-          }
-        : null,
+      myBids,
       minNextBid,
     };
   }

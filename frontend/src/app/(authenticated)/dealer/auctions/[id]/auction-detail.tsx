@@ -289,20 +289,31 @@ export function DealerAuctionDetailView({
       <section className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">My bids</h2>
 
-        {auction.myBid ? (
-          <div className="mb-4 rounded-lg bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">My current bid</p>
-            <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(auction.myBid.amount)}
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Placed {formatDateTime(auction.myBid.createdAt)}
-            </p>
-          </div>
-        ) : (
+        {auction.myBids.length === 0 ? (
           <p className="mb-4 text-sm text-gray-600">
             You haven&apos;t placed a bid on this auction yet.
           </p>
+        ) : (
+          <ul className="mb-4 space-y-2">
+            {auction.myBids.map((bid, index) => (
+              <li
+                key={bid.id}
+                className="flex items-start justify-between gap-3 rounded-lg bg-gray-50 p-3"
+              >
+                <span className="font-semibold text-gray-900">
+                  {formatCurrency(bid.amount)}
+                  {index === 0 ? (
+                    <span className="ml-2 text-xs font-normal text-gray-400">
+                      Latest
+                    </span>
+                  ) : null}
+                </span>
+                <span className="shrink-0 text-sm text-gray-500">
+                  {formatDateTime(bid.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
 
         {success ? (
@@ -316,7 +327,7 @@ export function DealerAuctionDetailView({
 
         {canBid && auction.minNextBid != null ? (
           <BidForm
-            key={`${auction.minNextBid}-${auction.myBid?.amount ?? 0}`}
+            key={`${auction.minNextBid}-${auction.myBids[0]?.amount ?? 0}`}
             auctionId={auction.id}
             minNextBid={auction.minNextBid}
             onBidPlaced={handleBidPlaced}

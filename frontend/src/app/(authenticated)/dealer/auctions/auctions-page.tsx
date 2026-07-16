@@ -16,7 +16,7 @@ export function AuctionsPageClient({
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Auctions</h1>
+        <h1 className="text-2xl font-bold">Open Auctions</h1>
       </div>
 
       {error && (
