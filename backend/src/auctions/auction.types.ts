@@ -1,22 +1,18 @@
 import { Prisma } from '@prisma/client';
 
-export const dealerAuctionListInclude = {
-  vehicle: {
-    select: {
-      make: true,
-      model: true,
-      year: true,
-      photos: true,
-      city: true,
-      country: true,
-      mileage: true,
-    },
-  },
-} satisfies Prisma.AuctionInclude;
-
 export function getDealerAuctionListInclude(dealerId: string) {
   return {
-    vehicle: dealerAuctionListInclude.vehicle,
+    vehicle: {
+      select: {
+        make: true,
+        model: true,
+        year: true,
+        photos: true,
+        city: true,
+        country: true,
+        mileage: true,
+      },
+    },
     bids: {
       where: { dealerId },
       select: { amount: true },

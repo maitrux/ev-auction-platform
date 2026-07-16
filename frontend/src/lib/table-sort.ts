@@ -1,6 +1,6 @@
 export type SortDirection = "asc" | "desc";
 
-export function compareSortValues(a: unknown, b: unknown): number {
+function compareSortValues(a: unknown, b: unknown): number {
   if (a == null && b == null) {
     return 0;
   }

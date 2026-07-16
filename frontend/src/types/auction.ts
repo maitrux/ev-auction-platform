@@ -89,13 +89,6 @@ export type AuctionFormState = {
   minIncrement: string;
 };
 
-export const initialAuctionForm: AuctionFormState = {
-  startsAt: "",
-  endsAt: "",
-  reservePrice: "",
-  minIncrement: "",
-};
-
 export interface CreateAuctionWithVehicleInput {
   saveAsDraft: boolean;
   vehicle: CreateVehicleInput;

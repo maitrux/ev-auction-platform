@@ -45,5 +45,3 @@ export function getInitialAuctionStatus(
 ): AuctionStatus {
   return startsAt <= now ? AuctionStatus.LIVE : AuctionStatus.SCHEDULED;
 }
-
-export { AuctionResult, AuctionStatus };

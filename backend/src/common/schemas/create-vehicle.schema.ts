@@ -49,4 +49,3 @@ export const createVehicleSchema = z
   });
 
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
-export type VehicleCondition = z.infer<typeof vehicleConditionSchema>;

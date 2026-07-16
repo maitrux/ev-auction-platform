@@ -1,9 +1,3 @@
-// import DealerBidsPage from "./bids-page";
-
-// export default function Page() {
-//   return <DealerBidsPage />;
-// }
-
 import { getMyBids } from "@/lib/server/bids";
 import { Bid } from "@/types/bid";
 import { BidsPageClient } from "./bids-page";

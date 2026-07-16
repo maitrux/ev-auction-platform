@@ -11,6 +11,3 @@ export const jwtPayloadSchema = z.object({
   email: z.email(),
   role: userRoleSchema,
 });
-
-export type LoginDto = z.infer<typeof loginSchema>;
-export type JwtPayload = z.infer<typeof jwtPayloadSchema>;
