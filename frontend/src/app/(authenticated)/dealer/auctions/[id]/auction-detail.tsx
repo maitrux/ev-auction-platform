@@ -1,6 +1,7 @@
 "use client";
 
 import { AuctionCountdown } from "@/components/auction-countdown";
+import ImageCarousel from "@/components/image-carousel";
 import {
   hasBidFormErrors,
   validateBidForm,
@@ -15,7 +16,6 @@ import {
 } from "@/lib/format";
 import { placeBidAction } from "@/lib/server/bid-actions";
 import type { DealerAuctionDetail } from "@/types";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -44,31 +44,6 @@ function FieldError({ id, message }: { id: string; message?: string }) {
     >
       {message}
     </p>
-  );
-}
-
-function VehiclePhotos({ photos, title }: { photos: string[]; title: string }) {
-  if (photos.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {photos.map((photo, index) => (
-        <div
-          key={photo}
-          className="relative aspect-[16/10] overflow-hidden rounded-lg bg-gray-100"
-        >
-          <Image
-            src={photo}
-            alt={`${title} photo ${index + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, 33vw"
-          />
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -223,10 +198,12 @@ export function DealerAuctionDetailView({
         </div>
       </div>
 
-      <VehiclePhotos
-        photos={auction.vehicle.photos}
-        title={title}
-      />
+      <div className="mb-6">
+        <ImageCarousel
+          photos={auction.vehicle.photos}
+          title={title}
+        />
+      </div>
 
       <section className="mb-8 rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Vehicle details</h2>

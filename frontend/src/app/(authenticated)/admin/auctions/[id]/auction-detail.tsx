@@ -1,10 +1,16 @@
 "use client";
 
+import ImageCarousel from "@/components/image-carousel";
 import {
   hasAuctionFormErrors,
   validateAuctionForm,
   type AuctionFormErrors,
 } from "@/lib/auction-form-validation";
+import {
+  formatAuctionOutcome,
+  getAcceptOutcomeError,
+  getHighestBid,
+} from "@/lib/auction-outcome";
 import {
   formatAuctionStatus,
   formatCurrency,
@@ -17,11 +23,6 @@ import {
   confirmAuctionOutcomeAction,
   publishAuctionAction,
 } from "@/lib/server/auction-actions";
-import {
-  formatAuctionOutcome,
-  getAcceptOutcomeError,
-  getHighestBid,
-} from "@/lib/auction-outcome";
 import type { AuctionDetail } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -169,6 +170,13 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
           {error}
         </div>
       )}
+
+      <div>
+        <ImageCarousel
+          photos={auction.vehicle.photos}
+          title={`${auction.vehicle.make} ${auction.vehicle.model}`}
+        />
+      </div>
 
       <div className="mb-8">
         <p className="text-sm text-gray-500">Auction #{shortId}</p>
@@ -425,7 +433,9 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
                           </span>
                         ) : null}
                       </td>
-                      <td className="px-2 py-2">{formatCurrency(bid.amount)}</td>
+                      <td className="px-2 py-2">
+                        {formatCurrency(bid.amount)}
+                      </td>
                       <td className="px-2 py-2">
                         {formatDateTime(bid.createdAt)}
                       </td>
@@ -470,7 +480,9 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
       <section className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Result</h2>
 
-        {auction.status === "ENDED" && auction.outcome === "SOLD" && auction.winningBid ? (
+        {auction.status === "ENDED" &&
+        auction.outcome === "SOLD" &&
+        auction.winningBid ? (
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-gray-500">Outcome</dt>
