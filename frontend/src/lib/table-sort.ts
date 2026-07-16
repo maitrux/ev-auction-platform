@@ -24,16 +24,39 @@ export function compareSortValues(a: unknown, b: unknown): number {
   return String(a).localeCompare(String(b));
 }
 
+export type SortOptions = {
+  nullsLast?: boolean;
+};
+
 export function sortBy<T>(
   items: T[],
   getValue: (item: T) => unknown,
   direction: SortDirection,
+  options: SortOptions = {},
 ): T[] {
+  const { nullsLast = false } = options;
   const multiplier = direction === "asc" ? 1 : -1;
 
-  return [...items].sort(
-    (a, b) => multiplier * compareSortValues(getValue(a), getValue(b)),
-  );
+  return [...items].sort((a, b) => {
+    const valueA = getValue(a);
+    const valueB = getValue(b);
+
+    if (nullsLast) {
+      if (valueA == null && valueB == null) {
+        return 0;
+      }
+
+      if (valueA == null) {
+        return 1;
+      }
+
+      if (valueB == null) {
+        return -1;
+      }
+    }
+
+    return multiplier * compareSortValues(valueA, valueB);
+  });
 }
 
 export function compareByOrder<T extends string>(

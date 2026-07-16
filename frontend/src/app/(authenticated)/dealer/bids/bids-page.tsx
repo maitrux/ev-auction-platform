@@ -9,10 +9,6 @@ interface BidsPageProps {
 export function BidsPageClient({ bids, error }: BidsPageProps) {
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My bids</h1>
-      </div>
-
       {error && (
         <div
           className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"

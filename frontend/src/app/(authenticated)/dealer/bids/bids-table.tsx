@@ -1,8 +1,19 @@
 "use client";
 
 import { DealerAuctionOutcomeBadge } from "@/components/dealer-auction-outcome-badge";
+import {
+  FilterMenu,
+  FilterMenuGroup,
+  NoFilterResults,
+  type FilterOption,
+} from "@/components/filter-menu";
 import { SortableTableHeader } from "@/components/sortable-table-header";
+import { useMultiSelectFilter } from "@/hooks/use-multi-select-filter";
 import { useTableSort } from "@/hooks/use-table-sort";
+import {
+  matchesDealerOutcomeFilter,
+  matchesStatusFilter,
+} from "@/lib/auction-filters";
 import {
   DealerAuctionFrom,
   getDealerAuctionDetailHref,
@@ -51,6 +62,25 @@ const BID_AUCTION_STATUS_ORDER: AuctionStatus[] = [
 ];
 
 const DEALER_OUTCOME_ORDER: DealerAuctionOutcome[] = ["PENDING", "RESOLVED"];
+
+const DEALER_BID_STATUSES: AuctionStatus[] = [
+  "LIVE",
+  "SCHEDULED",
+  "ENDED",
+  "CANCELLED",
+];
+
+const STATUS_FILTER_OPTIONS: FilterOption<AuctionStatus>[] =
+  DEALER_BID_STATUSES.map((status) => ({
+    value: status,
+    label: formatAuctionStatus(status).label,
+  }));
+
+const OUTCOME_FILTER_OPTIONS: FilterOption<DealerAuctionOutcome>[] =
+  DEALER_OUTCOME_ORDER.map((outcome) => ({
+    value: outcome,
+    label: outcome === "PENDING" ? "Pending" : "Resolved",
+  }));
 
 const BID_GROUP_SORT_COLUMNS: {
   key: BidGroupSortKey;
@@ -260,115 +290,170 @@ export function BidsTable({ bids }: BidsTableProps) {
     "placed",
     "desc",
   );
+  const { selected: selectedStatuses, toggle: toggleStatus, clear: clearStatuses } =
+    useMultiSelectFilter<AuctionStatus>();
+  const { selected: selectedOutcomes, toggle: toggleOutcome, clear: clearOutcomes } =
+    useMultiSelectFilter<DealerAuctionOutcome>();
+
+  const activeFilterCount = selectedStatuses.size + selectedOutcomes.size;
+
+  function clearAllFilters() {
+    clearStatuses();
+    clearOutcomes();
+  }
+
+  const filteredBidGroups = useMemo(
+    () =>
+      bidGroups.filter(
+        (group) =>
+          matchesStatusFilter(group.auction.status, selectedStatuses) &&
+          matchesDealerOutcomeFilter(group.auction.outcome, selectedOutcomes),
+      ),
+    [bidGroups, selectedStatuses, selectedOutcomes],
+  );
+
   const sortedBidGroups = useMemo(
     () =>
       sortBy(
-        bidGroups,
+        filteredBidGroups,
         (group) => getBidGroupSortValue(group, sortKey),
         direction,
+        { nullsLast: sortKey === "endsAt" },
       ),
-    [bidGroups, sortKey, direction],
+    [filteredBidGroups, sortKey, direction],
   );
 
   if (bids.length === 0) {
     return (
-      <div className="rounded-lg border bg-white p-8 text-center text-gray-600">
-        You haven&apos;t placed any bids yet.
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">My bids</h1>
+        </div>
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-600">
+          You haven&apos;t placed any bids yet.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-white">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b bg-gray-200">
-          <tr>
-            {BID_GROUP_SORT_COLUMNS.map((column) => (
-              <SortableTableHeader
-                key={column.key}
-                label={column.label}
-                sortKey={column.key}
-                activeSortKey={sortKey}
-                direction={direction as SortDirection}
-                onSort={toggleSort}
-              />
-            ))}
-          </tr>
-        </thead>
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My bids</h1>
+        <FilterMenu
+          activeCount={activeFilterCount}
+          onClearAll={clearAllFilters}
+        >
+          <FilterMenuGroup
+            legend="Auction status"
+            options={STATUS_FILTER_OPTIONS}
+            selected={selectedStatuses}
+            onToggle={toggleStatus}
+          />
+          <FilterMenuGroup
+            legend="Outcome"
+            options={OUTCOME_FILTER_OPTIONS}
+            selected={selectedOutcomes}
+            onToggle={toggleOutcome}
+          />
+        </FilterMenu>
+      </div>
 
-        <tbody>
-          {sortedBidGroups.map((group) => {
-            const latestBid = group.bids[0];
-            const status = formatAuctionStatus(group.auction.status);
-            const { vehicle } = group.auction;
-            const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-            const href = getDealerAuctionDetailHref(
-              group.auction.id,
-              DealerAuctionFrom.BIDS,
-            );
-            const won = group.bids.some((bid) => bid.auction.won);
-
-            return (
-              <tr
-                key={group.auction.id}
-                className="cursor-pointer border-b hover:bg-gray-50"
-                onClick={() => router.push(href)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(href);
-                  }
-                }}
-                tabIndex={0}
-                role="link"
-                aria-label={`View auction for ${vehicleLabel}`}
-              >
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  #{group.auction.id.slice(0, 8)}
-                </td>
-                <td className="px-4 py-3 font-medium">{vehicleLabel}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.badgeClassName}`}
-                  >
-                    {status.label}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  {group.auction.outcome ? (
-                    <DealerAuctionOutcomeBadge
-                      outcome={group.auction.outcome}
-                      won={won}
-                    />
-                  ) : (
-                    "-"
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span>{formatCurrency(latestBid.amount)}</span>
-
-                    <span onClick={(event) => event.stopPropagation()}>
-                      <BidHistoryPopover
-                        bids={group.bids}
-                        vehicleLabel={vehicleLabel}
-                      />
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  {formatDateTime(latestBid.createdAt)}
-                </td>
-                <td className="px-4 py-3">
-                  {group.auction.endsAt
-                    ? formatDate(group.auction.endsAt)
-                    : "-"}
-                </td>
+      {sortedBidGroups.length === 0 ? (
+        <NoFilterResults message="No bids match the selected filters." />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-gray-200">
+              <tr>
+                {BID_GROUP_SORT_COLUMNS.map((column) => (
+                  <SortableTableHeader
+                    key={column.key}
+                    label={column.label}
+                    sortKey={column.key}
+                    activeSortKey={sortKey}
+                    direction={direction as SortDirection}
+                    onSort={toggleSort}
+                  />
+                ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+
+            <tbody>
+              {sortedBidGroups.map((group) => {
+                const latestBid = group.bids[0];
+                const status = formatAuctionStatus(group.auction.status);
+                const { vehicle } = group.auction;
+                const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+                const href = getDealerAuctionDetailHref(
+                  group.auction.id,
+                  DealerAuctionFrom.BIDS,
+                );
+                const won = group.bids.some((bid) => bid.auction.won);
+
+                return (
+                  <tr
+                    key={group.auction.id}
+                    className="cursor-pointer border-b hover:bg-gray-50"
+                    onClick={() => router.push(href)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        router.push(href);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`View auction for ${vehicleLabel}`}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      #{group.auction.id.slice(0, 8)}
+                    </td>
+                    <td className="px-4 py-3 font-medium">{vehicleLabel}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.badgeClassName}`}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {group.auction.outcome ? (
+                        <DealerAuctionOutcomeBadge
+                          outcome={group.auction.outcome}
+                          won={won}
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span>{formatCurrency(latestBid.amount)}</span>
+
+                        <span onClick={(event) => event.stopPropagation()}>
+                          <BidHistoryPopover
+                            bids={group.bids}
+                            vehicleLabel={vehicleLabel}
+                          />
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {formatDateTime(latestBid.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {group.auction.endsAt
+                        ? formatDate(group.auction.endsAt)
+                        : "-"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
