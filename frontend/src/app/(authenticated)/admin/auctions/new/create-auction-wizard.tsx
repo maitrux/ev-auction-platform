@@ -12,7 +12,6 @@ import {
   type VehicleFormErrors,
 } from "@/lib/vehicle-form-validation";
 import {
-  initialAuctionForm,
   toCreateAuctionWithVehicleInput,
   type AuctionFormState,
   type VehicleFormState,
@@ -65,14 +64,34 @@ export function CreateAuctionWizard() {
   const [step, setStep] = useState<1 | 2>(1);
   const [vehicleForm, setVehicleForm] =
     useState<VehicleFormState>(initialVehicleForm);
-  const [auctionForm, setAuctionForm] =
-    useState<AuctionFormState>(initialAuctionForm);
+  const [auctionForm, setAuctionForm] = useState<AuctionFormState>(
+    createInitialAuctionForm(),
+  );
   const [vehicleFieldErrors, setVehicleFieldErrors] =
     useState<VehicleFormErrors>({});
   const [auctionFieldErrors, setAuctionFieldErrors] =
     useState<AuctionFormErrors>({});
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function formatDateTimeLocal(date: Date): string {
+    const offset = date.getTimezoneOffset();
+    const local = new Date(date.getTime() - offset * 60_000);
+
+    return local.toISOString().slice(0, 16);
+  }
+
+  function createInitialAuctionForm(): AuctionFormState {
+    const startsAt = new Date();
+    const endsAt = new Date(startsAt.getTime() + 24 * 60 * 60 * 1000);
+
+    return {
+      startsAt: formatDateTimeLocal(startsAt),
+      endsAt: formatDateTimeLocal(endsAt),
+      reservePrice: "",
+      minIncrement: "250",
+    };
+  }
 
   function clearVehicleFieldError(name: keyof VehicleFormState) {
     setVehicleFieldErrors((current) => {
@@ -116,10 +135,24 @@ export function CreateAuctionWizard() {
   function handleAuctionChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
-    setAuctionForm((current) => ({
-      ...current,
-      [name]: value,
-    }));
+    setAuctionForm((current) => {
+      const next = {
+        ...current,
+        [name]: value,
+      };
+
+      if (name === "startsAt") {
+        const start = new Date(value);
+
+        if (!Number.isNaN(start.getTime())) {
+          const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+          next.endsAt = formatDateTimeLocal(end);
+        }
+      }
+
+      return next;
+    });
+
     clearAuctionFieldError(name as keyof AuctionFormState);
     setError("");
   }
