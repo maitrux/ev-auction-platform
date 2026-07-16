@@ -1,6 +1,8 @@
 "use client";
 
 import ImageCarousel from "@/components/image-carousel";
+import { SortableTableHeader } from "@/components/sortable-table-header";
+import { useTableSort } from "@/hooks/use-table-sort";
 import {
   hasAuctionFormErrors,
   validateAuctionForm,
@@ -20,18 +22,110 @@ import {
   getMinEndDatetimeLocalValue,
   toDatetimeLocalValue,
 } from "@/lib/format";
+import { sortBy, type SortDirection } from "@/lib/table-sort";
 import {
   cancelAuctionAction,
   confirmAuctionOutcomeAction,
   publishAuctionAction,
 } from "@/lib/server/auction-actions";
-import type { AuctionDetail } from "@/types";
+import type { AuctionBid, AuctionDetail } from "@/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface AuctionDetailViewProps {
   auction: AuctionDetail;
+}
+
+type AuctionBidSortKey = "dealer" | "amount" | "createdAt";
+
+function getAuctionBidSortValue(
+  bid: AuctionBid,
+  key: AuctionBidSortKey,
+): unknown {
+  switch (key) {
+    case "dealer":
+      return bid.dealer.name;
+    case "amount":
+      return bid.amount;
+    case "createdAt":
+      return new Date(bid.createdAt).getTime();
+  }
+}
+
+function AuctionBidsTable({
+  bids,
+  highestBidId,
+}: {
+  bids: AuctionBid[];
+  highestBidId: string | undefined;
+}) {
+  const { sortKey, direction, toggleSort } = useTableSort<AuctionBidSortKey>(
+    "createdAt",
+    "desc",
+  );
+  const sortedBids = useMemo(
+    () => sortBy(bids, (bid) => getAuctionBidSortValue(bid, sortKey), direction),
+    [bids, sortKey, direction],
+  );
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="border-b">
+          <tr>
+            <SortableTableHeader
+              label="Dealer"
+              sortKey="dealer"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+            <SortableTableHeader
+              label="Bid"
+              sortKey="amount"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+            <SortableTableHeader
+              label="Time"
+              sortKey="createdAt"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+          </tr>
+        </thead>
+        <tbody>
+          {sortedBids.map((bid) => {
+            const isHighest = highestBidId === bid.id;
+
+            return (
+              <tr
+                key={bid.id}
+                className={`border-b ${isHighest ? "bg-green-50" : ""}`}
+              >
+                <td className="px-2 py-2">
+                  {bid.dealer.name}
+                  {isHighest ? (
+                    <span className="ml-2 text-xs font-medium text-green-700">
+                      Highest
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-2 py-2">{formatCurrency(bid.amount)}</td>
+                <td className="px-2 py-2">{formatDateTime(bid.createdAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function fieldClassName(hasError: boolean) {
@@ -488,44 +582,10 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
         {auction.bids.length === 0 ? (
           <p className="text-sm text-gray-600">No bids yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b">
-                <tr>
-                  <th className="px-2 py-2">Dealer</th>
-                  <th className="px-2 py-2">Bid</th>
-                  <th className="px-2 py-2">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auction.bids.map((bid) => {
-                  const isHighest = highestBid?.id === bid.id;
-
-                  return (
-                    <tr
-                      key={bid.id}
-                      className={`border-b ${isHighest ? "bg-green-50" : ""}`}
-                    >
-                      <td className="px-2 py-2">
-                        {bid.dealer.name}
-                        {isHighest ? (
-                          <span className="ml-2 text-xs font-medium text-green-700">
-                            Highest
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="px-2 py-2">
-                        {formatCurrency(bid.amount)}
-                      </td>
-                      <td className="px-2 py-2">
-                        {formatDateTime(bid.createdAt)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <AuctionBidsTable
+            bids={auction.bids}
+            highestBidId={highestBid?.id}
+          />
         )}
 
         {auction.status === "ENDED" && auction.outcome === "PENDING" ? (

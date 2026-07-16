@@ -1,6 +1,8 @@
 "use client";
 
 import { DealerAuctionOutcomeBadge } from "@/components/dealer-auction-outcome-badge";
+import { SortableTableHeader } from "@/components/sortable-table-header";
+import { useTableSort } from "@/hooks/use-table-sort";
 import {
   DealerAuctionFrom,
   getDealerAuctionDetailHref,
@@ -11,6 +13,13 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/format";
+import {
+  compareByOrder,
+  sortBy,
+  type SortDirection,
+} from "@/lib/table-sort";
+import type { AuctionStatus } from "@/types/auction";
+import type { DealerAuctionOutcome } from "@/types/dealer-auction-outcome";
 import type { Bid } from "@/types/bid";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -25,6 +34,60 @@ type BidGroup = {
   bids: Bid[];
 };
 
+type BidGroupSortKey =
+  | "id"
+  | "vehicle"
+  | "status"
+  | "outcome"
+  | "latestBid"
+  | "placed"
+  | "endsAt";
+
+const BID_AUCTION_STATUS_ORDER: AuctionStatus[] = [
+  "LIVE",
+  "SCHEDULED",
+  "ENDED",
+  "CANCELLED",
+];
+
+const DEALER_OUTCOME_ORDER: DealerAuctionOutcome[] = ["PENDING", "RESOLVED"];
+
+const BID_GROUP_SORT_COLUMNS: {
+  key: BidGroupSortKey;
+  label: string;
+}[] = [
+  { key: "id", label: "Auction ID" },
+  { key: "vehicle", label: "Vehicle" },
+  { key: "status", label: "Auction status" },
+  { key: "outcome", label: "Outcome" },
+  { key: "latestBid", label: "Latest bid" },
+  { key: "placed", label: "Placed" },
+  { key: "endsAt", label: "Auction ends" },
+];
+
+function getBidGroupSortValue(group: BidGroup, key: BidGroupSortKey): unknown {
+  const latestBid = group.bids[0];
+  const { auction } = group;
+  const { vehicle } = auction;
+
+  switch (key) {
+    case "id":
+      return group.auction.id;
+    case "vehicle":
+      return `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    case "status":
+      return compareByOrder(auction.status, BID_AUCTION_STATUS_ORDER);
+    case "outcome":
+      return compareByOrder(auction.outcome, DEALER_OUTCOME_ORDER);
+    case "latestBid":
+      return latestBid.amount;
+    case "placed":
+      return new Date(latestBid.createdAt).getTime();
+    case "endsAt":
+      return auction.endsAt ? new Date(auction.endsAt).getTime() : null;
+  }
+}
+
 function groupBidsByAuction(bids: Bid[]): BidGroup[] {
   const groups = new Map<string, Bid[]>();
 
@@ -34,19 +97,13 @@ function groupBidsByAuction(bids: Bid[]): BidGroup[] {
     groups.set(bid.auction.id, existing);
   }
 
-  return Array.from(groups.values())
-    .map((groupBids) => ({
-      auction: groupBids[0].auction,
-      bids: groupBids.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
-    }))
-    .sort(
+  return Array.from(groups.values()).map((groupBids) => ({
+    auction: groupBids[0].auction,
+    bids: groupBids.sort(
       (a, b) =>
-        new Date(b.bids[0].createdAt).getTime() -
-        new Date(a.bids[0].createdAt).getTime(),
-    );
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    ),
+  }));
 }
 
 function HistoryIcon() {
@@ -199,6 +256,19 @@ function BidHistoryPopover({
 export function BidsTable({ bids }: BidsTableProps) {
   const router = useRouter();
   const bidGroups = useMemo(() => groupBidsByAuction(bids), [bids]);
+  const { sortKey, direction, toggleSort } = useTableSort<BidGroupSortKey>(
+    "placed",
+    "desc",
+  );
+  const sortedBidGroups = useMemo(
+    () =>
+      sortBy(
+        bidGroups,
+        (group) => getBidGroupSortValue(group, sortKey),
+        direction,
+      ),
+    [bidGroups, sortKey, direction],
+  );
 
   if (bids.length === 0) {
     return (
@@ -213,18 +283,21 @@ export function BidsTable({ bids }: BidsTableProps) {
       <table className="w-full text-left text-sm">
         <thead className="border-b bg-gray-200">
           <tr>
-            <th className="px-4 py-3">Auction ID</th>
-            <th className="px-4 py-3">Vehicle</th>
-            <th className="px-4 py-3">Auction status</th>
-            <th className="px-4 py-3">Outcome</th>
-            <th className="px-4 py-3">Latest bid</th>
-            <th className="px-4 py-3">Placed</th>
-            <th className="px-4 py-3">Auction ends</th>
+            {BID_GROUP_SORT_COLUMNS.map((column) => (
+              <SortableTableHeader
+                key={column.key}
+                label={column.label}
+                sortKey={column.key}
+                activeSortKey={sortKey}
+                direction={direction as SortDirection}
+                onSort={toggleSort}
+              />
+            ))}
           </tr>
         </thead>
 
         <tbody>
-          {bidGroups.map((group) => {
+          {sortedBidGroups.map((group) => {
             const latestBid = group.bids[0];
             const status = formatAuctionStatus(group.auction.status);
             const { vehicle } = group.auction;
