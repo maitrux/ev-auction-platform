@@ -326,6 +326,10 @@ export function DealerAuctionDetailView({
           <p className="text-sm text-gray-600">
             Bidding opens when the auction goes live.
           </p>
+        ) : auction.status === "CANCELLED" ? (
+          <p className="text-sm text-gray-600">
+            This auction was cancelled and is no longer accepting bids.
+          </p>
         ) : (
           <p className="text-sm text-gray-600">
             This auction is no longer accepting bids.

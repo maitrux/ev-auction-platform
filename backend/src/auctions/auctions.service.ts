@@ -104,10 +104,7 @@ export class AuctionsService {
 
     const effectiveStatus = getEffectiveAuctionStatus(auction);
 
-    if (
-      effectiveStatus === AuctionStatus.DRAFT ||
-      effectiveStatus === AuctionStatus.CANCELLED
-    ) {
+    if (effectiveStatus === AuctionStatus.DRAFT) {
       throw new NotFoundException('Auction not found');
     }
 

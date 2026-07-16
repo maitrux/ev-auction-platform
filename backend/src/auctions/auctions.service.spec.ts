@@ -243,6 +243,18 @@ describe('AuctionsService', () => {
         service.findOneForDealer('auction-1', 'dealer-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
+
+    it('allows dealers to view cancelled auctions', async () => {
+      const auction = buildDealerDetailAuction({
+        status: AuctionStatus.CANCELLED,
+      });
+      prisma.auction.findUnique.mockResolvedValue(auction);
+
+      const result = await service.findOneForDealer('auction-1', 'dealer-1');
+
+      expect(result.status).toBe(AuctionStatus.CANCELLED);
+      expect(result.minNextBid).toBeNull();
+    });
   });
 
   describe('confirmOutcome via update', () => {
