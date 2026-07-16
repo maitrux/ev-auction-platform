@@ -77,9 +77,10 @@ function BidHistoryPopover({
   vehicleLabel: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(
-    null,
-  );
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const closeTimeoutRef = useRef<number | null>(null);
 
@@ -238,7 +239,7 @@ export function BidsTable({ bids }: BidsTableProps) {
             return (
               <tr
                 key={group.auction.id}
-                className="border-b hover:bg-gray-50"
+                className="cursor-pointer border-b hover:bg-gray-50"
                 onClick={() => router.push(href)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {

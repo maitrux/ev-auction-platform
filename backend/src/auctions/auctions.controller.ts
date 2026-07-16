@@ -37,8 +37,8 @@ export class AuctionsController {
 
   @Get('open')
   @Roles(UserRole.DEALER)
-  findOpenForDealer() {
-    return this.auctionsService.findOpenForDealer();
+  findOpenForDealer(@Req() request: AuthenticatedRequest) {
+    return this.auctionsService.findOpenForDealer(request.user.id);
   }
 
   @Get('open/:id')

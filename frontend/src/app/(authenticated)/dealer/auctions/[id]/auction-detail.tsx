@@ -15,10 +15,10 @@ import {
 } from "@/lib/format";
 import { placeBidAction } from "@/lib/server/bid-actions";
 import type { DealerAuctionDetail } from "@/types";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface DealerAuctionDetailViewProps {
   auction: DealerAuctionDetail;
@@ -72,42 +72,30 @@ function VehiclePhotos({ photos, title }: { photos: string[]; title: string }) {
   );
 }
 
-export function DealerAuctionDetailView({
-  auction,
-  backHref,
-  backLabel,
-}: DealerAuctionDetailViewProps) {
-  const router = useRouter();
-  const [amount, setAmount] = useState(
-    auction.minNextBid != null ? String(auction.minNextBid) : "",
-  );
+function BidForm({
+  auctionId,
+  minNextBid,
+  onBidPlaced,
+}: {
+  auctionId: string;
+  minNextBid: number;
+  onBidPlaced: (amount: number) => void;
+}) {
+  const [amount, setAmount] = useState(String(minNextBid));
   const [fieldErrors, setFieldErrors] = useState<BidFormErrors>({});
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (auction.minNextBid != null) {
-      setAmount(String(auction.minNextBid));
-    }
-  }, [auction.minNextBid, auction.myBid?.amount]);
-
-  const status = formatAuctionStatus(auction.status);
-  const title = `${auction.vehicle.year} ${auction.vehicle.make} ${auction.vehicle.model}`;
-  const canBid = auction.status === "LIVE" && auction.minNextBid != null;
 
   function handleAmountChange(event: React.ChangeEvent<HTMLInputElement>) {
     setAmount(event.target.value);
     setFieldErrors({});
     setError("");
-    setSuccess("");
   }
 
   async function handlePlaceBid() {
     setError("");
-    setSuccess("");
 
-    const validationErrors = validateBidForm(amount, auction.minNextBid);
+    const validationErrors = validateBidForm(amount, minNextBid);
 
     if (hasBidFormErrors(validationErrors)) {
       setFieldErrors(validationErrors);
@@ -118,7 +106,7 @@ export function DealerAuctionDetailView({
     setFieldErrors({});
     setIsSubmitting(true);
 
-    const result = await placeBidAction(auction.id, Number(amount));
+    const result = await placeBidAction(auctionId, Number(amount));
 
     setIsSubmitting(false);
 
@@ -127,7 +115,80 @@ export function DealerAuctionDetailView({
       return;
     }
 
-    setSuccess(`Your bid of ${formatCurrency(result.bid.amount)} was placed successfully.`);
+    onBidPlaced(result.bid.amount);
+  }
+
+  return (
+    <div>
+      <p className="mb-3 text-sm text-gray-600">
+        Minimum bid:{" "}
+        <span className="font-medium text-gray-900">
+          {formatCurrency(minNextBid)}
+        </span>
+      </p>
+
+      {error ? (
+        <div
+          className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"
+          role="alert"
+        >
+          {error}
+        </div>
+      ) : null}
+
+      <div className="max-w-xs">
+        <label
+          htmlFor="bid-amount"
+          className="mb-1 block text-sm font-medium"
+        >
+          Bid amount (€)
+        </label>
+        <input
+          id="bid-amount"
+          name="amount"
+          type="number"
+          value={amount}
+          onChange={handleAmountChange}
+          className={fieldClassName(Boolean(fieldErrors.amount))}
+          aria-invalid={Boolean(fieldErrors.amount)}
+          aria-describedby={fieldErrors.amount ? "bid-amount-error" : undefined}
+          min={minNextBid}
+          step="1"
+        />
+        <FieldError
+          id="bid-amount-error"
+          message={fieldErrors.amount}
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handlePlaceBid}
+        disabled={isSubmitting}
+        className="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        Place bid
+      </button>
+    </div>
+  );
+}
+
+export function DealerAuctionDetailView({
+  auction,
+  backHref,
+  backLabel,
+}: DealerAuctionDetailViewProps) {
+  const router = useRouter();
+  const [success, setSuccess] = useState("");
+
+  const status = formatAuctionStatus(auction.status);
+  const title = `${auction.vehicle.year} ${auction.vehicle.make} ${auction.vehicle.model}`;
+  const canBid = auction.status === "LIVE" && auction.minNextBid != null;
+
+  function handleBidPlaced(amount: number) {
+    setSuccess(
+      `Your bid of ${formatCurrency(amount)} was placed successfully.`,
+    );
     router.refresh();
   }
 
@@ -143,7 +204,9 @@ export function DealerAuctionDetailView({
       </div>
 
       <div className="mb-8">
-        <p className="text-sm text-gray-500">Auction #{auction.id.slice(0, 8)}</p>
+        <p className="text-sm text-gray-500">
+          Auction #{auction.id.slice(0, 8)}
+        </p>
         <h1 className="text-2xl font-bold">{title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <span
@@ -224,11 +287,11 @@ export function DealerAuctionDetailView({
       </section>
 
       <section className="rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Your bid</h2>
+        <h2 className="mb-4 text-lg font-semibold">My bids</h2>
 
         {auction.myBid ? (
           <div className="mb-4 rounded-lg bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">Your current bid</p>
+            <p className="text-sm text-gray-600">My current bid</p>
             <p className="text-2xl font-bold text-gray-900">
               {formatCurrency(auction.myBid.amount)}
             </p>
@@ -242,15 +305,6 @@ export function DealerAuctionDetailView({
           </p>
         )}
 
-        {error ? (
-          <div
-            className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"
-            role="alert"
-          >
-            {error}
-          </div>
-        ) : null}
-
         {success ? (
           <div
             className="mb-4 rounded bg-green-100 p-3 text-sm text-green-700"
@@ -260,51 +314,13 @@ export function DealerAuctionDetailView({
           </div>
         ) : null}
 
-        {canBid ? (
-          <div>
-            {auction.minNextBid != null ? (
-              <p className="mb-3 text-sm text-gray-600">
-                Minimum bid:{" "}
-                <span className="font-medium text-gray-900">
-                  {formatCurrency(auction.minNextBid)}
-                </span>
-              </p>
-            ) : null}
-
-            <div className="max-w-xs">
-              <label
-                htmlFor="bid-amount"
-                className="mb-1 block text-sm font-medium"
-              >
-                Bid amount (€)
-              </label>
-              <input
-                id="bid-amount"
-                name="amount"
-                type="number"
-                value={amount}
-                onChange={handleAmountChange}
-                className={fieldClassName(Boolean(fieldErrors.amount))}
-                aria-invalid={Boolean(fieldErrors.amount)}
-                aria-describedby={fieldErrors.amount ? "bid-amount-error" : undefined}
-                min={auction.minNextBid ?? undefined}
-                step="1"
-              />
-              <FieldError
-                id="bid-amount-error"
-                message={fieldErrors.amount}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handlePlaceBid}
-              disabled={isSubmitting}
-              className="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              Place bid
-            </button>
-          </div>
+        {canBid && auction.minNextBid != null ? (
+          <BidForm
+            key={`${auction.minNextBid}-${auction.myBid?.amount ?? 0}`}
+            auctionId={auction.id}
+            minNextBid={auction.minNextBid}
+            onBidPlaced={handleBidPlaced}
+          />
         ) : auction.status === "SCHEDULED" ? (
           <p className="text-sm text-gray-600">
             Bidding opens when the auction goes live.

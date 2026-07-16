@@ -26,7 +26,7 @@ import {
   auctionDetailInclude,
   auctionListInclude,
   dealerAuctionDetailInclude,
-  dealerAuctionListInclude,
+  getDealerAuctionListInclude,
   type AuctionDetailRecord,
   type AuctionListRecord,
   type DealerAuctionDetailRecord,
@@ -55,14 +55,14 @@ export class AuctionsService {
     return auctions.map((auction) => this.toListItem(auction));
   }
 
-  async findOpenForDealer() {
+  async findOpenForDealer(dealerId: string) {
     const auctions = await this.prisma.auction.findMany({
       where: {
         status: {
           notIn: [AuctionStatus.DRAFT, AuctionStatus.CANCELLED],
         },
       },
-      include: dealerAuctionListInclude,
+      include: getDealerAuctionListInclude(dealerId),
     });
 
     return auctions
@@ -361,6 +361,7 @@ export class AuctionsService {
       startsAt: auction.startsAt,
       endsAt: auction.endsAt,
       vehicle: auction.vehicle,
+      myBid: auction.bids[0]?.amount ?? null,
     };
   }
 

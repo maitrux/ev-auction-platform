@@ -30,6 +30,7 @@ export interface DealerAuctionListItem {
   status: AuctionStatus;
   startsAt: string | null;
   endsAt: string | null;
+  myBid: number | null;
   vehicle: {
     make: string;
     model: string;

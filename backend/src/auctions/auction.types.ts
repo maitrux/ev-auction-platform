@@ -14,6 +14,18 @@ export const dealerAuctionListInclude = {
   },
 } satisfies Prisma.AuctionInclude;
 
+export function getDealerAuctionListInclude(dealerId: string) {
+  return {
+    vehicle: dealerAuctionListInclude.vehicle,
+    bids: {
+      where: { dealerId },
+      select: { amount: true },
+      orderBy: { amount: 'desc' as const },
+      take: 1,
+    },
+  } satisfies Prisma.AuctionInclude;
+}
+
 export const auctionListInclude = {
   vehicle: {
     select: {
@@ -63,7 +75,7 @@ export type AuctionListRecord = Prisma.AuctionGetPayload<{
 }>;
 
 export type DealerAuctionListRecord = Prisma.AuctionGetPayload<{
-  include: typeof dealerAuctionListInclude;
+  include: ReturnType<typeof getDealerAuctionListInclude>;
 }>;
 
 export const dealerAuctionDetailInclude = {

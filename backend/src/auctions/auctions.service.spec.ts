@@ -59,6 +59,7 @@ describe('AuctionsService', () => {
           country: 'Germany',
           mileage: 25000,
         },
+        bids: [],
         ...overrides,
       };
     }
@@ -80,7 +81,7 @@ describe('AuctionsService', () => {
         }),
       ]);
 
-      const result = await service.findOpenForDealer();
+      const result = await service.findOpenForDealer('dealer-1');
 
       expect(result).toHaveLength(2);
       expect(result.map((auction) => auction.id)).toEqual([
@@ -115,7 +116,7 @@ describe('AuctionsService', () => {
         }),
       ]);
 
-      const result = await service.findOpenForDealer();
+      const result = await service.findOpenForDealer('dealer-1');
 
       expect(result.map((auction) => auction.id)).toEqual([
         'live-sooner',
@@ -128,7 +129,7 @@ describe('AuctionsService', () => {
     it('includes enriched vehicle fields for dealer cards', async () => {
       prisma.auction.findMany.mockResolvedValue([buildAuction()]);
 
-      const [auction] = await service.findOpenForDealer();
+      const [auction] = await service.findOpenForDealer('dealer-1');
 
       expect(auction.vehicle).toEqual({
         make: 'Tesla',
@@ -139,8 +140,21 @@ describe('AuctionsService', () => {
         country: 'Germany',
         mileage: 25000,
       });
+      expect(auction.myBid).toBeNull();
       expect(auction).not.toHaveProperty('highestBid');
       expect(auction).not.toHaveProperty('bidCount');
+    });
+
+    it('includes the dealer highest bid when they have bid on the auction', async () => {
+      prisma.auction.findMany.mockResolvedValue([
+        buildAuction({
+          bids: [{ amount: 27500 }],
+        }),
+      ]);
+
+      const [auction] = await service.findOpenForDealer('dealer-1');
+
+      expect(auction.myBid).toBe(27500);
     });
   });
 

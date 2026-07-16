@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import type { AuthenticatedRequest } from 'src/common/types/authenticated-request';
 import { AuctionsController } from './auctions.controller';
 import { AuctionsService } from './auctions.service';
 
@@ -36,7 +37,17 @@ describe('AuctionsController', () => {
     const openAuctions = [{ id: 'auction-1' }];
     auctionsService.findOpenForDealer.mockResolvedValue(openAuctions);
 
-    await expect(controller.findOpenForDealer()).resolves.toEqual(openAuctions);
-    expect(auctionsService.findOpenForDealer).toHaveBeenCalled();
+    const request = {
+      user: {
+        id: 'dealer-1',
+        email: 'dealer@example.com',
+        role: 'DEALER',
+      },
+    } as AuthenticatedRequest;
+
+    await expect(controller.findOpenForDealer(request)).resolves.toEqual(
+      openAuctions,
+    );
+    expect(auctionsService.findOpenForDealer).toHaveBeenCalledWith('dealer-1');
   });
 });

@@ -57,9 +57,7 @@ export function AuctionCountdown({
   onExpire,
 }: AuctionCountdownProps) {
   const targetDate = getTargetDate(status, startsAt, endsAt);
-  const [remainingMs, setRemainingMs] = useState<number | null>(() =>
-    targetDate ? targetDate.getTime() - Date.now() : null,
-  );
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
   useEffect(() => {
     if (!targetDate) {
@@ -83,8 +81,19 @@ export function AuctionCountdown({
     };
   }, [onExpire, targetDate]);
 
-  if (!targetDate || remainingMs === null) {
+  if (!targetDate) {
     return null;
+  }
+
+  const prefix = status === "LIVE" ? "Ends in" : "Starts in";
+
+  if (remainingMs === null) {
+    return (
+      <p className="text-sm font-medium text-gray-900">
+        {prefix}{" "}
+        <span className="font-semibold text-blue-700">...</span>
+      </p>
+    );
   }
 
   if (remainingMs <= 0) {
@@ -94,8 +103,6 @@ export function AuctionCountdown({
       </p>
     );
   }
-
-  const prefix = status === "LIVE" ? "Ends in" : "Starts in";
 
   return (
     <p className="text-sm font-medium text-gray-900">

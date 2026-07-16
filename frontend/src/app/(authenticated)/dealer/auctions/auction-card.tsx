@@ -3,7 +3,11 @@ import {
   DealerAuctionFrom,
   getDealerAuctionDetailHref,
 } from "@/lib/dealer-auction-navigation";
-import { formatAuctionStatus, formatNumber } from "@/lib/format";
+import {
+  formatAuctionStatus,
+  formatCurrency,
+  formatNumber,
+} from "@/lib/format";
 import type { DealerAuctionListItem } from "@/types/auction";
 import Image from "next/image";
 import Link from "next/link";
@@ -64,7 +68,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
   return (
     <Link
       href={getDealerAuctionDetailHref(auction.id, DealerAuctionFrom.AUCTIONS)}
-      className="group flex flex-col overflow-hidden rounded-lg border bg-white transition hover:border-blue-300 hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-lg border bg-white transition hover:border-blue-300 hover:shadow-md"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
         <VehicleImage
@@ -96,11 +100,24 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           </p>
         </div>
 
-        <AuctionCountdown
-          status={auction.status}
-          startsAt={auction.startsAt}
-          endsAt={auction.endsAt}
-        />
+        <div className="mt-auto space-y-3">
+          <div className="min-h-14">
+            {auction.myBid != null ? (
+              <div className="rounded-lg bg-gray-100 px-3 py-2">
+                <p className="text-xs text-gray-600">My bid</p>
+                <p className="font-semibold text-gray-900">
+                  {formatCurrency(auction.myBid)}
+                </p>
+              </div>
+            ) : null}
+          </div>
+
+          <AuctionCountdown
+            status={auction.status}
+            startsAt={auction.startsAt}
+            endsAt={auction.endsAt}
+          />
+        </div>
       </div>
     </Link>
   );
