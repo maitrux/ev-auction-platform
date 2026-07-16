@@ -1,9 +1,13 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import express from 'express';
 import { loginSchema } from '../common/schemas/auth.schema';
 import { parseSchema } from '../common/utils/parse-schema';
 import { AuthService } from './auth.service';
 
+// Excluded from Swagger because authentication relies on an httpOnly cookie.
+// Login is performed through the application UI, not Swagger.
+@ApiExcludeController()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
