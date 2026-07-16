@@ -225,6 +225,8 @@ describe('AuctionsService', () => {
           },
         ],
         minNextBid: 27500,
+        outcome: null,
+        won: false,
       });
       expect(result).not.toHaveProperty('reservePrice');
       expect(result).not.toHaveProperty('minIncrement');

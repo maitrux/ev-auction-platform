@@ -1,6 +1,7 @@
 "use client";
 
 import { AuctionCountdown } from "@/components/auction-countdown";
+import { DealerAuctionOutcomeBadge } from "@/components/dealer-auction-outcome-badge";
 import ImageCarousel from "@/components/image-carousel";
 import {
   hasBidFormErrors,
@@ -196,6 +197,18 @@ export function DealerAuctionDetailView({
             onExpire={() => router.refresh()}
           />
         </div>
+
+        {auction.won ? (
+          <div className="mt-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3">
+            <DealerAuctionOutcomeBadge
+              outcome="RESOLVED"
+              won
+            />
+            <p className="mt-2 text-sm text-green-800">
+              Congratulations — your winning bid was accepted for this auction.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-6">

@@ -1,5 +1,6 @@
 import type { CreateVehicleInput, Vehicle, VehicleFormState } from "./vehicle";
 import { toCreateVehicleInput } from "./vehicle";
+import type { DealerAuctionOutcome } from "./dealer-auction-outcome";
 
 export type AuctionStatus =
   | "DRAFT"
@@ -54,6 +55,8 @@ export interface DealerAuctionDetail {
     createdAt: string;
   }[];
   minNextBid: number | null;
+  outcome: DealerAuctionOutcome | null;
+  won: boolean;
 }
 
 export interface AuctionBid {

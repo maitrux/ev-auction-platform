@@ -13,7 +13,7 @@ export default function ImageCarousel({ photos, title }: ImageCarouselProps) {
 
   if (photos.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center bg-gray-100 text-gray-400">
+      <div className="flex h-full items-center justify-center bg-gray-100 text-gray-400 mb-6 rounded-md p-4">
         No images available
       </div>
     );

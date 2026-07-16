@@ -23,6 +23,10 @@ import {
   getInitialAuctionStatus,
 } from './auction-status';
 import {
+  didDealerWinBid,
+  getDealerAuctionOutcome,
+} from './dealer-auction-outcome';
+import {
   auctionDetailInclude,
   auctionListInclude,
   dealerAuctionDetailInclude,
@@ -387,6 +391,11 @@ export class AuctionsService {
         ? getMinNextBid(auction.bids, auction.minIncrement)
         : null;
 
+    const outcome = getDealerAuctionOutcome(effectiveStatus, auction.result);
+    const won = myBids.some((bid) =>
+      didDealerWinBid(bid.id, auction.winningBidId, auction.result),
+    );
+
     return {
       id: auction.id,
       status: effectiveStatus,
@@ -395,6 +404,8 @@ export class AuctionsService {
       vehicle: auction.vehicle,
       myBids,
       minNextBid,
+      outcome,
+      won,
     };
   }
 

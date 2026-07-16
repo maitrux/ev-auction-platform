@@ -226,7 +226,6 @@ export function BidsTable({ bids }: BidsTableProps) {
         <tbody>
           {bidGroups.map((group) => {
             const latestBid = group.bids[0];
-            const hasHistory = group.bids.length > 1;
             const status = formatAuctionStatus(group.auction.status);
             const { vehicle } = group.auction;
             const vehicleLabel = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
@@ -275,14 +274,13 @@ export function BidsTable({ bids }: BidsTableProps) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <span>{formatCurrency(latestBid.amount)}</span>
-                    {hasHistory ? (
-                      <span onClick={(event) => event.stopPropagation()}>
-                        <BidHistoryPopover
-                          bids={group.bids}
-                          vehicleLabel={vehicleLabel}
-                        />
-                      </span>
-                    ) : null}
+
+                    <span onClick={(event) => event.stopPropagation()}>
+                      <BidHistoryPopover
+                        bids={group.bids}
+                        vehicleLabel={vehicleLabel}
+                      />
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3">

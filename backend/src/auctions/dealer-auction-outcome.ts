@@ -1,9 +1,7 @@
 import { AuctionOutcome } from 'src/common/constants/auction-outcome';
 import { AuctionResult } from 'src/common/constants/auction-result';
-import {
-  DealerAuctionOutcome,
-} from 'src/common/constants/dealer-auction-outcome';
 import { AuctionStatus } from 'src/common/constants/auction-status';
+import { DealerAuctionOutcome } from 'src/common/constants/dealer-auction-outcome';
 import { getAuctionOutcome } from './auction-outcome';
 
 export function getDealerAuctionOutcome(
