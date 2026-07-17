@@ -156,3 +156,9 @@ Photos are entered as comma-separated image URLs in the create-auction form (no 
 ## Immutable bids
 
 Once submitted, bids cannot be edited, canceled, or deleted.
+
+## AI usage
+
+I used AI tools throughout the development process to improve productivity and code quality. I used ChatGPT and Cursor initially to help set up the project structure and configuration. During development, I also used AI to generate boilerplate code such as modules, controllers, and services, which I reviewed and adapted to fit the application's requirements.
+
+I found AI especially useful for writing tests, discussing implementation approaches and best practices, creating UI layouts quickly, and improving consistency across the codebase through refactoring and code unification. It also helped prevent simple human errors, such as typos, incorrect route names, and repetitive implementation mistakes, allowing me to focus more on architecture, business logic, and overall quality.
