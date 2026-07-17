@@ -7,6 +7,9 @@ import { BidsService } from './bids.service';
 describe('BidsService', () => {
   let service: BidsService;
 
+  const day = 24 * 60 * 60 * 1000;
+  const daysFromNow = (days: number) => new Date(Date.now() + days * day);
+
   const prisma = {
     bid: {
       findMany: jest.fn(),
@@ -41,14 +44,14 @@ describe('BidsService', () => {
       return {
         id: 'auction-1',
         status: AuctionStatus.LIVE,
-        startsAt: new Date('2026-07-14T12:00:00.000Z'),
-        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        startsAt: daysFromNow(-1),
+        endsAt: daysFromNow(4),
         minIncrement: 250,
         result: null,
         bids: [
           {
             amount: 27250,
-            createdAt: new Date('2026-07-14T11:00:00.000Z'),
+            createdAt: daysFromNow(-2),
           },
         ],
         ...overrides,
@@ -60,7 +63,7 @@ describe('BidsService', () => {
       prisma.bid.create.mockResolvedValue({
         id: 'bid-1',
         amount: 27500,
-        createdAt: new Date('2026-07-14T12:30:00.000Z'),
+        createdAt: daysFromNow(0),
       });
 
       const result = await service.create('dealer-1', {
@@ -92,8 +95,8 @@ describe('BidsService', () => {
     it('rejects bids on non-live auctions', async () => {
       prisma.auction.findUnique.mockResolvedValue(
         buildLiveAuction({
-          startsAt: new Date('2026-07-20T12:00:00.000Z'),
-          endsAt: new Date('2026-07-23T12:00:00.000Z'),
+          startsAt: daysFromNow(5),
+          endsAt: daysFromNow(8),
         }),
       );
 

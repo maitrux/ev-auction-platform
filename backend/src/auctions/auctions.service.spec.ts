@@ -10,6 +10,9 @@ import { AuctionsService } from './auctions.service';
 describe('AuctionsService', () => {
   let service: AuctionsService;
 
+  const day = 24 * 60 * 60 * 1000;
+  const daysFromNow = (days: number) => new Date(Date.now() + days * day);
+
   const prisma = {
     auction: {
       findMany: jest.fn(),
@@ -47,8 +50,8 @@ describe('AuctionsService', () => {
       return {
         id: 'auction-1',
         status: AuctionStatus.LIVE,
-        startsAt: new Date('2026-07-14T12:00:00.000Z'),
-        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        startsAt: daysFromNow(-4),
+        endsAt: daysFromNow(4),
         result: null,
         vehicle: {
           make: 'Tesla',
@@ -70,14 +73,14 @@ describe('AuctionsService', () => {
         buildAuction({
           id: 'scheduled-1',
           status: AuctionStatus.SCHEDULED,
-          startsAt: new Date('2026-07-20T12:00:00.000Z'),
-          endsAt: new Date('2026-07-23T12:00:00.000Z'),
+          startsAt: daysFromNow(5),
+          endsAt: daysFromNow(8),
         }),
         buildAuction({
           id: 'ended-1',
           status: AuctionStatus.ENDED,
-          startsAt: new Date('2026-06-01T12:00:00.000Z'),
-          endsAt: new Date('2026-06-05T12:00:00.000Z'),
+          startsAt: daysFromNow(-20),
+          endsAt: daysFromNow(-15),
         }),
       ]);
 
@@ -97,22 +100,24 @@ describe('AuctionsService', () => {
         buildAuction({
           id: 'scheduled-later',
           status: AuctionStatus.SCHEDULED,
-          startsAt: new Date('2026-07-25T12:00:00.000Z'),
-          endsAt: new Date('2026-07-28T12:00:00.000Z'),
+          startsAt: daysFromNow(10),
+          endsAt: daysFromNow(13),
         }),
         buildAuction({
           id: 'live-later',
-          endsAt: new Date('2026-07-20T12:00:00.000Z'),
+          startsAt: daysFromNow(-1),
+          endsAt: daysFromNow(5),
         }),
         buildAuction({
           id: 'live-sooner',
-          endsAt: new Date('2026-07-17T12:00:00.000Z'),
+          startsAt: daysFromNow(-1),
+          endsAt: daysFromNow(2),
         }),
         buildAuction({
           id: 'scheduled-sooner',
           status: AuctionStatus.SCHEDULED,
-          startsAt: new Date('2026-07-20T12:00:00.000Z'),
-          endsAt: new Date('2026-07-23T12:00:00.000Z'),
+          startsAt: daysFromNow(5),
+          endsAt: daysFromNow(8),
         }),
       ]);
 
@@ -160,11 +165,14 @@ describe('AuctionsService', () => {
 
   describe('findOneForDealer', () => {
     function buildDealerDetailAuction(overrides: Record<string, unknown> = {}) {
+      const startsAt = daysFromNow(-4);
+      const endsAt = daysFromNow(4);
+
       return {
         id: 'auction-1',
         status: AuctionStatus.LIVE,
-        startsAt: new Date('2026-07-14T12:00:00.000Z'),
-        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        startsAt,
+        endsAt,
         minIncrement: 250,
         reservePrice: 42000,
         result: null,
@@ -191,13 +199,13 @@ describe('AuctionsService', () => {
           {
             id: 'bid-1',
             amount: 27250,
-            createdAt: new Date('2026-07-14T11:00:00.000Z'),
+            createdAt: new Date(startsAt.getTime() - day),
             dealerId: 'dealer-1',
           },
           {
             id: 'bid-2',
             amount: 26900,
-            createdAt: new Date('2026-07-14T10:00:00.000Z'),
+            createdAt: new Date(startsAt.getTime() - 2 * day),
             dealerId: 'dealer-2',
           },
         ],
@@ -214,14 +222,14 @@ describe('AuctionsService', () => {
       expect(result).toEqual({
         id: 'auction-1',
         status: AuctionStatus.LIVE,
-        startsAt: new Date('2026-07-14T12:00:00.000Z'),
-        endsAt: new Date('2026-07-18T12:00:00.000Z'),
+        startsAt: auction.startsAt,
+        endsAt: auction.endsAt,
         vehicle: auction.vehicle,
         myBids: [
           {
             id: 'bid-1',
             amount: 27250,
-            createdAt: new Date('2026-07-14T11:00:00.000Z'),
+            createdAt: auction.bids[0].createdAt,
           },
         ],
         minNextBid: 27500,
@@ -262,8 +270,8 @@ describe('AuctionsService', () => {
       return {
         id: 'auction-ended',
         status: AuctionStatus.LIVE,
-        startsAt: new Date('2026-06-01T12:00:00.000Z'),
-        endsAt: new Date('2026-06-05T12:00:00.000Z'),
+        startsAt: daysFromNow(-10),
+        endsAt: daysFromNow(-5),
         reservePrice: 15000,
         minIncrement: 200,
         result: null,
