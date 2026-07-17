@@ -268,7 +268,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
 
     if (hasAuctionFormErrors(validationErrors)) {
       setPublishErrors(validationErrors);
-      setError("Please fix the highlighted fields.");
+      setError("");
       return;
     }
 

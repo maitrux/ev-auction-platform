@@ -109,7 +109,7 @@ export async function createAuctionWithVehicle(
         if (Object.keys(fieldErrors).length > 0) {
           return {
             success: false,
-            message: "Please fix the highlighted fields.",
+            message: "",
             fieldErrors,
           };
         }

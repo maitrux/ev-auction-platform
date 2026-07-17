@@ -62,9 +62,9 @@ function CountdownLine({
 }) {
   return (
     <p className={`text-sm font-medium ${className}`}>
-      <span className="font-normal text-gray-600">{formattedDate}</span>
-      <span className="text-gray-400"> · </span>
       {children}
+      <span className="text-gray-400"> · </span>
+      <span className="font-normal text-gray-600">{formattedDate}</span>
     </p>
   );
 }

@@ -165,7 +165,7 @@ export function CreateAuctionWizard() {
 
     if (hasFormErrors(validationErrors)) {
       setVehicleFieldErrors(validationErrors);
-      setError("Please fix the highlighted fields.");
+      setError("");
       setIsSubmitting(false);
       return;
     }
@@ -193,7 +193,7 @@ export function CreateAuctionWizard() {
 
     if (hasFormErrors(validationErrors)) {
       setVehicleFieldErrors(validationErrors);
-      setError("Please fix the highlighted fields.");
+      setError("");
       return;
     }
 
@@ -209,7 +209,7 @@ export function CreateAuctionWizard() {
 
     if (hasAuctionFormErrors(validationErrors)) {
       setAuctionFieldErrors(validationErrors);
-      setError("Please fix the highlighted fields.");
+      setError("");
       setIsSubmitting(false);
       return;
     }

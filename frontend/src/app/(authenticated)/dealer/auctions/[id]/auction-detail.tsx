@@ -50,10 +50,12 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 function BidForm({
   auctionId,
   minNextBid,
+  onBidAttempt,
   onBidPlaced,
 }: {
   auctionId: string;
   minNextBid: number;
+  onBidAttempt: () => void;
   onBidPlaced: (amount: number) => void;
 }) {
   const [amount, setAmount] = useState(String(minNextBid));
@@ -68,13 +70,14 @@ function BidForm({
   }
 
   async function handlePlaceBid() {
+    onBidAttempt();
     setError("");
 
     const validationErrors = validateBidForm(amount, minNextBid);
 
     if (hasBidFormErrors(validationErrors)) {
       setFieldErrors(validationErrors);
-      setError("Please fix the highlighted fields.");
+      setError("");
       return;
     }
 
@@ -159,6 +162,10 @@ export function DealerAuctionDetailView({
   const status = formatAuctionStatus(auction.status);
   const title = `${auction.vehicle.year} ${auction.vehicle.make} ${auction.vehicle.model}`;
   const canBid = auction.status === "LIVE" && auction.minNextBid != null;
+
+  function handleBidAttempt() {
+    setSuccess("");
+  }
 
   function handleBidPlaced(amount: number) {
     setSuccess(
@@ -263,6 +270,7 @@ export function DealerAuctionDetailView({
             key={`${auction.minNextBid}-${auction.myBids[0]?.amount ?? 0}`}
             auctionId={auction.id}
             minNextBid={auction.minNextBid}
+            onBidAttempt={handleBidAttempt}
             onBidPlaced={handleBidPlaced}
           />
         ) : auction.status === "SCHEDULED" ? (
