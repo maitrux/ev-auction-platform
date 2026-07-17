@@ -78,7 +78,7 @@ Open `http://localhost:3000` and sign in using one of the seeded accounts.
 
 ---
 
-# Running tests
+# Running the tests
 
 ```bash
 cd backend
