@@ -49,14 +49,12 @@ The seed script creates demo users, vehicles, auctions, and bids.
 
 All seeded accounts use the password `password123`.
 
-
 | Email                 | Role   |
 | --------------------- | ------ |
 | `admin@aampere.com`   | Admin  |
 | `dealer1@example.com` | Dealer |
 | `dealer2@example.com` | Dealer |
 | `dealer3@example.com` | Dealer |
-
 
 ## 5. Start the applications
 
@@ -112,15 +110,13 @@ The application keeps admin and dealer concerns in separate areas in both fronte
 
 An auction can be in one of five statuses:
 
-
 | Status      | Meaning                                                                                                                 |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `DRAFT`     | Created but not yet published. Settings are optional and the auction is hidden from dealers. Only drafts can be edited. |
 | `SCHEDULED` | Published and waiting to start. Not yet open for bidding.                                                               |
 | `LIVE`      | Published and currently running. Dealers can place bids.                                                                |
 | `ENDED`     | The auction window has closed.                                                                                          |
-| `CANCELLED` | Cancelled by an admin. Terminal state — no bidding accepted.                                                            |
-
+| `CANCELED`  | CANCELED by an admin. Terminal state — no bidding accepted.                                                             |
 
 ## Auction outcome
 
@@ -128,13 +124,11 @@ Once an auction has ended, an admin must confirm the result. Outcomes are immuta
 
 ### Admin view
 
-
 | Outcome   | Meaning                                                   |
 | --------- | --------------------------------------------------------- |
 | `PENDING` | Auction has ended but no decision has been made yet.      |
 | `SOLD`    | Highest bid accepted. That bid is recorded as the winner. |
 | `UNSOLD`  | All bids rejected. No winner.                             |
-
 
 When resolving an auction, an administrator may reject the highest bid even if it exceeds the reserve price. However, if a bid is accepted, it must always be the highest valid bid.
 
@@ -142,16 +136,14 @@ When resolving an auction, an administrator may reject the highest bid even if i
 
 Dealers see a simplified outcome model:
 
-
 | Outcome    | Meaning                                                                                                   |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
 | `PENDING`  | Auction has ended; final result not yet available to dealers.                                             |
 | `RESOLVED` | Admin has made a decision (sold or unsold). Dealers are not shown whether the auction was sold or unsold. |
 
+## CANCELED auctions
 
-## Cancelled auctions
-
-An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. Cancelled auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
+An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. CANCELED auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
 
 ## Vehicle images
 

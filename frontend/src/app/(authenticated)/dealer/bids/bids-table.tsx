@@ -24,14 +24,10 @@ import {
   formatDate,
   formatDateTime,
 } from "@/lib/format";
-import {
-  compareByOrder,
-  sortBy,
-  type SortDirection,
-} from "@/lib/table-sort";
+import { compareByOrder, sortBy, type SortDirection } from "@/lib/table-sort";
 import type { AuctionStatus } from "@/types/auction";
-import type { DealerAuctionOutcome } from "@/types/dealer-auction-outcome";
 import type { Bid } from "@/types/bid";
+import type { DealerAuctionOutcome } from "@/types/dealer-auction-outcome";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -58,7 +54,7 @@ const BID_AUCTION_STATUS_ORDER: AuctionStatus[] = [
   "LIVE",
   "SCHEDULED",
   "ENDED",
-  "CANCELLED",
+  "CANCELED",
 ];
 
 const DEALER_OUTCOME_ORDER: DealerAuctionOutcome[] = ["PENDING", "RESOLVED"];
@@ -67,7 +63,7 @@ const DEALER_BID_STATUSES: AuctionStatus[] = [
   "LIVE",
   "SCHEDULED",
   "ENDED",
-  "CANCELLED",
+  "CANCELED",
 ];
 
 const STATUS_FILTER_OPTIONS: FilterOption<AuctionStatus>[] =
@@ -290,10 +286,16 @@ export function BidsTable({ bids }: BidsTableProps) {
     "placed",
     "desc",
   );
-  const { selected: selectedStatuses, toggle: toggleStatus, clear: clearStatuses } =
-    useMultiSelectFilter<AuctionStatus>();
-  const { selected: selectedOutcomes, toggle: toggleOutcome, clear: clearOutcomes } =
-    useMultiSelectFilter<DealerAuctionOutcome>();
+  const {
+    selected: selectedStatuses,
+    toggle: toggleStatus,
+    clear: clearStatuses,
+  } = useMultiSelectFilter<AuctionStatus>();
+  const {
+    selected: selectedOutcomes,
+    toggle: toggleOutcome,
+    clear: clearOutcomes,
+  } = useMultiSelectFilter<DealerAuctionOutcome>();
 
   const activeFilterCount = selectedStatuses.size + selectedOutcomes.size;
 

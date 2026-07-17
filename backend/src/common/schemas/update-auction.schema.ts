@@ -3,7 +3,7 @@ import { isInPast } from '../validation/date-validation';
 
 export const updateAuctionSchema = z
   .object({
-    status: z.enum(['CANCELLED']).optional(),
+    status: z.enum(['CANCELED']).optional(),
     outcome: z.enum(['SOLD', 'UNSOLD']).optional(),
     startsAt: z.coerce.date().optional(),
     endsAt: z.coerce.date().optional(),

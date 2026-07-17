@@ -3,7 +3,7 @@ export const AuctionStatus = {
   SCHEDULED: 'SCHEDULED',
   LIVE: 'LIVE',
   ENDED: 'ENDED',
-  CANCELLED: 'CANCELLED',
+  CANCELED: 'CANCELED',
 } as const;
 
 export type AuctionStatus = (typeof AuctionStatus)[keyof typeof AuctionStatus];

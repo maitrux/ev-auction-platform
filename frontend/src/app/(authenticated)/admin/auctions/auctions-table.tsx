@@ -21,11 +21,7 @@ import {
   formatCurrency,
   formatDate,
 } from "@/lib/format";
-import {
-  compareByOrder,
-  sortBy,
-  type SortDirection,
-} from "@/lib/table-sort";
+import { compareByOrder, sortBy, type SortDirection } from "@/lib/table-sort";
 import type { AuctionListItem, AuctionOutcome, AuctionStatus } from "@/types";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -50,7 +46,7 @@ const AUCTION_STATUS_ORDER: AuctionStatus[] = [
   "SCHEDULED",
   "ENDED",
   "DRAFT",
-  "CANCELLED",
+  "CANCELED",
 ];
 
 const AUCTION_OUTCOME_ORDER: AuctionOutcome[] = ["PENDING", "SOLD", "UNSOLD"];
@@ -62,7 +58,7 @@ const ADMIN_STATUSES: AuctionStatus[] = [
   "SCHEDULED",
   "LIVE",
   "ENDED",
-  "CANCELLED",
+  "CANCELED",
 ];
 
 const ADMIN_OUTCOME_FILTERS: AdminOutcomeFilter[] = [
@@ -72,19 +68,18 @@ const ADMIN_OUTCOME_FILTERS: AdminOutcomeFilter[] = [
   "UNSOLD",
 ];
 
-const STATUS_FILTER_OPTIONS: FilterOption<AuctionStatus>[] =
-  ADMIN_STATUSES.map((status) => ({
+const STATUS_FILTER_OPTIONS: FilterOption<AuctionStatus>[] = ADMIN_STATUSES.map(
+  (status) => ({
     value: status,
     label: formatAuctionStatus(status).label,
-  }));
+  }),
+);
 
 const OUTCOME_FILTER_OPTIONS: FilterOption<AdminOutcomeFilter>[] =
   ADMIN_OUTCOME_FILTERS.map((outcome) => ({
     value: outcome,
     label:
-      outcome === "NONE"
-        ? "No outcome"
-        : formatAuctionOutcome(outcome).label,
+      outcome === "NONE" ? "No outcome" : formatAuctionOutcome(outcome).label,
   }));
 
 function getAuctionSortValue(
@@ -131,10 +126,16 @@ export function AuctionsTable({ auctions, headerActions }: AuctionsTableProps) {
     "startsAt",
     "desc",
   );
-  const { selected: selectedStatuses, toggle: toggleStatus, clear: clearStatuses } =
-    useMultiSelectFilter<AuctionStatus>();
-  const { selected: selectedOutcomes, toggle: toggleOutcome, clear: clearOutcomes } =
-    useMultiSelectFilter<AdminOutcomeFilter>();
+  const {
+    selected: selectedStatuses,
+    toggle: toggleStatus,
+    clear: clearStatuses,
+  } = useMultiSelectFilter<AuctionStatus>();
+  const {
+    selected: selectedOutcomes,
+    toggle: toggleOutcome,
+    clear: clearOutcomes,
+  } = useMultiSelectFilter<AdminOutcomeFilter>();
 
   const activeFilterCount = selectedStatuses.size + selectedOutcomes.size;
 

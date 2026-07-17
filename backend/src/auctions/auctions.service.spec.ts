@@ -252,15 +252,15 @@ describe('AuctionsService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('allows dealers to view cancelled auctions', async () => {
+    it('allows dealers to view canceled auctions', async () => {
       const auction = buildDealerDetailAuction({
-        status: AuctionStatus.CANCELLED,
+        status: AuctionStatus.CANCELED,
       });
       prisma.auction.findUnique.mockResolvedValue(auction);
 
       const result = await service.findOneForDealer('auction-1', 'dealer-1');
 
-      expect(result.status).toBe(AuctionStatus.CANCELLED);
+      expect(result.status).toBe(AuctionStatus.CANCELED);
       expect(result.minNextBid).toBeNull();
     });
   });

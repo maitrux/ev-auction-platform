@@ -16,8 +16,8 @@ export function getEffectiveAuctionStatus(
     return AuctionStatus.DRAFT;
   }
 
-  if (auction.status === AuctionStatus.CANCELLED) {
-    return AuctionStatus.CANCELLED;
+  if (auction.status === AuctionStatus.CANCELED) {
+    return AuctionStatus.CANCELED;
   }
 
   if (auction.result === AuctionResult.SOLD) {

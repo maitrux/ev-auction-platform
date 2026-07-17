@@ -23,10 +23,6 @@ import {
   getInitialAuctionStatus,
 } from './auction-status';
 import {
-  didDealerWinBid,
-  getDealerAuctionOutcome,
-} from './dealer-auction-outcome';
-import {
   auctionDetailInclude,
   auctionListInclude,
   dealerAuctionDetailInclude,
@@ -36,6 +32,10 @@ import {
   type DealerAuctionDetailRecord,
   type DealerAuctionListRecord,
 } from './auction.types';
+import {
+  didDealerWinBid,
+  getDealerAuctionOutcome,
+} from './dealer-auction-outcome';
 
 type AuctionCreateData = {
   vehicleId: string;
@@ -63,7 +63,7 @@ export class AuctionsService {
     const auctions = await this.prisma.auction.findMany({
       where: {
         status: {
-          notIn: [AuctionStatus.DRAFT, AuctionStatus.CANCELLED],
+          notIn: [AuctionStatus.DRAFT, AuctionStatus.CANCELED],
         },
       },
       include: getDealerAuctionListInclude(dealerId),
@@ -158,17 +158,17 @@ export class AuctionsService {
       throw new NotFoundException('Auction not found');
     }
 
-    if (input.status === 'CANCELLED') {
+    if (input.status === 'CANCELED') {
       if (
-        existing.status === AuctionStatus.CANCELLED ||
+        existing.status === AuctionStatus.CANCELED ||
         existing.status === AuctionStatus.ENDED
       ) {
-        throw new BadRequestException('Auction cannot be cancelled');
+        throw new BadRequestException('Auction cannot be canceled');
       }
 
       const updated = await this.prisma.auction.update({
         where: { id },
-        data: { status: AuctionStatus.CANCELLED },
+        data: { status: AuctionStatus.CANCELED },
         include: auctionDetailInclude,
       });
 

@@ -1,13 +1,13 @@
+import type { DealerAuctionOutcome } from "./dealer-auction-outcome";
 import type { CreateVehicleInput, Vehicle, VehicleFormState } from "./vehicle";
 import { toCreateVehicleInput } from "./vehicle";
-import type { DealerAuctionOutcome } from "./dealer-auction-outcome";
 
 export type AuctionStatus =
   | "DRAFT"
   | "SCHEDULED"
   | "LIVE"
   | "ENDED"
-  | "CANCELLED";
+  | "CANCELED";
 
 export type AuctionOutcome = "PENDING" | "SOLD" | "UNSOLD";
 

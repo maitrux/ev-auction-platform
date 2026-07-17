@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  createAuctionWithVehicle,
-  updateAuction,
-} from "@/lib/server/auctions";
+import { createAuctionWithVehicle, updateAuction } from "@/lib/server/auctions";
 import type { CreateAuctionWithVehicleInput } from "@/types";
 import { revalidatePath } from "next/cache";
 
@@ -20,7 +17,7 @@ export async function createAuctionWithVehicleAction(
 }
 
 export async function cancelAuctionAction(id: string) {
-  return updateAuction(id, { status: "CANCELLED" });
+  return updateAuction(id, { status: "CANCELED" });
 }
 
 export async function publishAuctionAction(

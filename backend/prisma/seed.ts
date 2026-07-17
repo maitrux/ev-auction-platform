@@ -201,7 +201,7 @@ type SeedAuctions = {
   pendingReviewAuction: { id: string };
   unsoldAuction: { id: string };
   completedAuction: { id: string };
-  cancelledAuction: { id: string };
+  canceledAuction: { id: string };
 };
 
 async function createAuctions(vehicles: SeedVehicles): Promise<SeedAuctions> {
@@ -285,10 +285,10 @@ async function createAuctions(vehicles: SeedVehicles): Promise<SeedAuctions> {
     } as never,
   });
 
-  const cancelledAuction = await prisma.auction.create({
+  const canceledAuction = await prisma.auction.create({
     data: {
       vehicleId: vehicles.hyundai.id,
-      status: AuctionStatus.CANCELLED,
+      status: AuctionStatus.CANCELED,
       startsAt: new Date('2026-06-20T10:00:00'),
       endsAt: new Date('2026-06-23T10:00:00'),
       reservePrice: 27000,
@@ -303,7 +303,7 @@ async function createAuctions(vehicles: SeedVehicles): Promise<SeedAuctions> {
     pendingReviewAuction,
     unsoldAuction,
     completedAuction,
-    cancelledAuction,
+    canceledAuction,
   };
 }
 
@@ -395,10 +395,10 @@ async function createBids(
     data: { winningBidId: winningBid.id },
   });
 
-  // Cancelled auction
+  // CANCELED auction
   await prisma.bid.create({
     data: {
-      auctionId: auctions.cancelledAuction.id,
+      auctionId: auctions.canceledAuction.id,
       dealerId: dealerB.id,
       amount: 17200,
       createdAt: new Date('2026-05-13T15:00:00'),

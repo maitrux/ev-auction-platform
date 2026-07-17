@@ -50,7 +50,7 @@ enum AuctionStatus {
   SCHEDULED
   LIVE
   ENDED
-  CANCELLED
+  CANCELED
 }
 
 model Auction {
