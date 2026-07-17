@@ -33,6 +33,7 @@ Copy the example environment files:
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.local.example frontend/.env.local
+```
 
 > **Note:** Use the same `JWT_SECRET` value in both files.
 
@@ -153,6 +154,14 @@ Dealers see a simplified outcome model:
 ## Cancelled auctions
 
 An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. Cancelled auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
+
+## Vehicle images
+
+When creating an auction, vehicle photos are optional. In a production application, at least one image should be required.
+
+Photos are entered as comma-separated image URLs in the create-auction form (no file upload in the current implementation). For testing, free stock photos can be sourced from [Pexels](https://www.pexels.com). Copy the direct image URL and paste it into the form — for example:
+
+`https://images.pexels.com/photos/10029878/pexels-photo-10029878.jpeg`
 
 ## Immutable bids
 
