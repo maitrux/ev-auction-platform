@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { formatDateTime } from "@/lib/format";
 import type { AuctionStatus } from "@/types/auction";
 
 interface AuctionCountdownProps {
@@ -50,6 +51,24 @@ function formatRemaining(milliseconds: number): string {
   return parts.join(" ");
 }
 
+function CountdownLine({
+  formattedDate,
+  children,
+  className = "text-gray-900",
+}: {
+  formattedDate: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p className={`text-sm font-medium ${className}`}>
+      <span className="font-normal text-gray-600">{formattedDate}</span>
+      <span className="text-gray-400"> · </span>
+      {children}
+    </p>
+  );
+}
+
 export function AuctionCountdown({
   status,
   startsAt,
@@ -86,30 +105,34 @@ export function AuctionCountdown({
   }
 
   const prefix = status === "LIVE" ? "Ends in" : "Starts in";
+  const formattedDate = formatDateTime(targetDate);
 
   if (remainingMs === null) {
     return (
-      <p className="text-sm font-medium text-gray-900">
+      <CountdownLine formattedDate={formattedDate}>
         {prefix}{" "}
         <span className="font-semibold text-blue-700">...</span>
-      </p>
+      </CountdownLine>
     );
   }
 
   if (remainingMs <= 0) {
     return (
-      <p className="text-sm font-medium text-gray-700">
+      <CountdownLine
+        formattedDate={formattedDate}
+        className="text-gray-700"
+      >
         {status === "LIVE" ? "Ended" : "Starting soon"}
-      </p>
+      </CountdownLine>
     );
   }
 
   return (
-    <p className="text-sm font-medium text-gray-900">
+    <CountdownLine formattedDate={formattedDate}>
       {prefix}{" "}
       <span className="font-semibold text-blue-700">
         {formatRemaining(remainingMs)}
       </span>
-    </p>
+    </CountdownLine>
   );
 }

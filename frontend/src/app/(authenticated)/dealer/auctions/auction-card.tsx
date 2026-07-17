@@ -10,30 +10,13 @@ import {
 import {
   formatAuctionStatus,
   formatCurrency,
-  formatDateTime,
   formatNumber,
 } from "@/lib/format";
-import type { DealerAuctionListItem, AuctionStatus } from "@/types/auction";
+import type { DealerAuctionListItem } from "@/types/auction";
 import Link from "next/link";
 
 interface AuctionCardProps {
   auction: DealerAuctionListItem;
-}
-
-function getAuctionTime(
-  status: AuctionStatus,
-  startsAt: string | null,
-  endsAt: string | null,
-): { label: string; value: string } | null {
-  if (status === "LIVE" && endsAt) {
-    return { label: "Ends", value: formatDateTime(endsAt) };
-  }
-
-  if (status === "SCHEDULED" && startsAt) {
-    return { label: "Starts", value: formatDateTime(startsAt) };
-  }
-
-  return null;
 }
 
 function VehicleImage({ photos, title }: { photos: string[]; title: string }) {
@@ -61,12 +44,6 @@ function VehicleImage({ photos, title }: { photos: string[]; title: string }) {
 export function AuctionCard({ auction }: AuctionCardProps) {
   const status = formatAuctionStatus(auction.status);
   const title = `${auction.vehicle.year} ${auction.vehicle.make} ${auction.vehicle.model}`;
-  const auctionTime = getAuctionTime(
-    auction.status,
-    auction.startsAt,
-    auction.endsAt,
-  );
-
   return (
     <Link
       href={getDealerAuctionDetailHref(auction.id, DealerAuctionFrom.AUCTIONS)}
@@ -119,13 +96,6 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             startsAt={auction.startsAt}
             endsAt={auction.endsAt}
           />
-
-          {auctionTime ? (
-            <p className="text-sm text-gray-600">
-              {auctionTime.label}{" "}
-              <span className="text-gray-900">{auctionTime.value}</span>
-            </p>
-          ) : null}
         </div>
       </div>
     </Link>
