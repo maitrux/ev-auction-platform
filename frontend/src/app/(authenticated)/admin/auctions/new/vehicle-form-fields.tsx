@@ -1,5 +1,5 @@
-import type { VehicleFormErrors } from "@/lib/vehicle-form-validation";
 import { getMaxDateInputValue } from "@/lib/format";
+import type { VehicleFormErrors } from "@/lib/vehicle-form-validation";
 import type { VehicleFormState } from "@/types";
 
 function fieldClassName(hasError: boolean) {
@@ -219,7 +219,7 @@ export function VehicleFormFields({
         />
 
         <Input
-          label="Mileage"
+          label="Mileage (km)"
           name="mileage"
           type="number"
           value={form.mileage}

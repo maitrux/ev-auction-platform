@@ -3,6 +3,7 @@
 import { AuctionCountdown } from "@/components/auction-countdown";
 import { DealerAuctionOutcomeBadge } from "@/components/dealer-auction-outcome-badge";
 import ImageCarousel from "@/components/image-carousel";
+import { VehicleDetails } from "@/components/vehicle-details";
 import {
   hasBidFormErrors,
   validateBidForm,
@@ -11,9 +12,7 @@ import {
 import {
   formatAuctionStatus,
   formatCurrency,
-  formatDate,
   formatDateTime,
-  formatNumber,
 } from "@/lib/format";
 import { placeBidAction } from "@/lib/server/bid-actions";
 import type { DealerAuctionDetail } from "@/types";
@@ -218,63 +217,7 @@ export function DealerAuctionDetailView({
         />
       </div>
 
-      <section className="mb-8 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Vehicle details</h2>
-        <dl className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <dt className="text-gray-500">VIN</dt>
-            <dd className="font-medium">{auction.vehicle.vin}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Year</dt>
-            <dd className="font-medium">{auction.vehicle.year}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Mileage</dt>
-            <dd className="font-medium">
-              {formatNumber(auction.vehicle.mileage)} km
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Battery capacity</dt>
-            <dd className="font-medium">
-              {auction.vehicle.batteryCapacityKwh} kWh
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Battery SoH</dt>
-            <dd className="font-medium">{auction.vehicle.batterySoH}%</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Range</dt>
-            <dd className="font-medium">
-              {formatNumber(auction.vehicle.rangeKm)} km
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Registration date</dt>
-            <dd className="font-medium">
-              {formatDate(auction.vehicle.registrationDate)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Location</dt>
-            <dd className="font-medium">
-              {auction.vehicle.city}, {auction.vehicle.country}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Condition</dt>
-            <dd className="font-medium">{auction.vehicle.condition}</dd>
-          </div>
-          {auction.vehicle.conditionNotes ? (
-            <div className="col-span-2">
-              <dt className="text-gray-500">Condition notes</dt>
-              <dd className="font-medium">{auction.vehicle.conditionNotes}</dd>
-            </div>
-          ) : null}
-        </dl>
-      </section>
+      <VehicleDetails vehicle={auction.vehicle} />
 
       <section className="rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">My bids</h2>

@@ -1,6 +1,7 @@
 "use client";
 
 import ImageCarousel from "@/components/image-carousel";
+import { VehicleDetails } from "@/components/vehicle-details";
 import { SortableTableHeader } from "@/components/sortable-table-header";
 import { useTableSort } from "@/hooks/use-table-sort";
 import {
@@ -17,7 +18,6 @@ import {
   formatAuctionStatus,
   formatCurrency,
   formatDateTime,
-  formatNumber,
   getMinDatetimeLocalValue,
   getMinEndDatetimeLocalValue,
   toDatetimeLocalValue,
@@ -65,7 +65,8 @@ function AuctionBidsTable({
     "desc",
   );
   const sortedBids = useMemo(
-    () => sortBy(bids, (bid) => getAuctionBidSortValue(bid, sortKey), direction),
+    () =>
+      sortBy(bids, (bid) => getAuctionBidSortValue(bid, sortKey), direction),
     [bids, sortKey, direction],
   );
 
@@ -329,39 +330,7 @@ export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
         </span>
       </div>
 
-      <section className="mb-8 rounded-lg border bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Vehicle details</h2>
-        <dl className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <dt className="text-gray-500">VIN</dt>
-            <dd className="font-medium">{auction.vehicle.vin}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Year</dt>
-            <dd className="font-medium">{auction.vehicle.year}</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Mileage</dt>
-            <dd className="font-medium">
-              {formatNumber(auction.vehicle.mileage)} km
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Battery SoH</dt>
-            <dd className="font-medium">{auction.vehicle.batterySoH}%</dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Location</dt>
-            <dd className="font-medium">
-              {auction.vehicle.city}, {auction.vehicle.country}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-gray-500">Condition</dt>
-            <dd className="font-medium">{auction.vehicle.condition}</dd>
-          </div>
-        </dl>
-      </section>
+      <VehicleDetails vehicle={auction.vehicle} />
 
       <section className="mb-8 rounded-lg border bg-white p-6">
         <h2 className="mb-4 text-lg font-semibold">Auction details</h2>
