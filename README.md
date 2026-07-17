@@ -116,7 +116,7 @@ An auction can be in one of five statuses:
 | `SCHEDULED` | Published and waiting to start. Not yet open for bidding.                                                               |
 | `LIVE`      | Published and currently running. Dealers can place bids.                                                                |
 | `ENDED`     | The auction window has closed.                                                                                          |
-| `CANCELED`  | CANCELED by an admin. Terminal state — no bidding accepted.                                                             |
+| `CANCELED`  | Canceled by an admin. Terminal state — no bidding accepted.                                                             |
 
 ## Auction outcome
 
@@ -141,9 +141,9 @@ Dealers see a simplified outcome model:
 | `PENDING`  | Auction has ended; final result not yet available to dealers.                                             |
 | `RESOLVED` | Admin has made a decision (sold or unsold). Dealers are not shown whether the auction was sold or unsold. |
 
-## CANCELED auctions
+## Canceled auctions
 
-An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. CANCELED auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
+An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. Canceled auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
 
 ## Vehicle images
 
