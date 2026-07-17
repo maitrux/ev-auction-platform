@@ -1,0 +1,663 @@
+"use client";
+
+import ImageCarousel from "@/components/image-carousel";
+import { SortableTableHeader } from "@/components/sortable-table-header";
+import { useTableSort } from "@/hooks/use-table-sort";
+import {
+  hasAuctionFormErrors,
+  validateAuctionForm,
+  type AuctionFormErrors,
+} from "@/lib/auction-form-validation";
+import {
+  formatAuctionOutcome,
+  getAcceptOutcomeError,
+  getHighestBid,
+} from "@/lib/auction-outcome";
+import {
+  formatAuctionStatus,
+  formatCurrency,
+  formatDateTime,
+  formatNumber,
+  getMinDatetimeLocalValue,
+  getMinEndDatetimeLocalValue,
+  toDatetimeLocalValue,
+} from "@/lib/format";
+import { sortBy, type SortDirection } from "@/lib/table-sort";
+import {
+  cancelAuctionAction,
+  confirmAuctionOutcomeAction,
+  publishAuctionAction,
+} from "@/lib/server/auction-actions";
+import type { AuctionBid, AuctionDetail } from "@/types";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
+interface AuctionDetailViewProps {
+  auction: AuctionDetail;
+}
+
+type AuctionBidSortKey = "dealer" | "amount" | "createdAt";
+
+function getAuctionBidSortValue(
+  bid: AuctionBid,
+  key: AuctionBidSortKey,
+): unknown {
+  switch (key) {
+    case "dealer":
+      return bid.dealer.name;
+    case "amount":
+      return bid.amount;
+    case "createdAt":
+      return new Date(bid.createdAt).getTime();
+  }
+}
+
+function AuctionBidsTable({
+  bids,
+  highestBidId,
+}: {
+  bids: AuctionBid[];
+  highestBidId: string | undefined;
+}) {
+  const { sortKey, direction, toggleSort } = useTableSort<AuctionBidSortKey>(
+    "createdAt",
+    "desc",
+  );
+  const sortedBids = useMemo(
+    () => sortBy(bids, (bid) => getAuctionBidSortValue(bid, sortKey), direction),
+    [bids, sortKey, direction],
+  );
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead className="border-b">
+          <tr>
+            <SortableTableHeader
+              label="Dealer"
+              sortKey="dealer"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+            <SortableTableHeader
+              label="Bid"
+              sortKey="amount"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+            <SortableTableHeader
+              label="Time"
+              sortKey="createdAt"
+              activeSortKey={sortKey}
+              direction={direction as SortDirection}
+              onSort={toggleSort}
+              className="px-2 py-2"
+            />
+          </tr>
+        </thead>
+        <tbody>
+          {sortedBids.map((bid) => {
+            const isHighest = highestBidId === bid.id;
+
+            return (
+              <tr
+                key={bid.id}
+                className={`border-b ${isHighest ? "bg-green-50" : ""}`}
+              >
+                <td className="px-2 py-2">
+                  {bid.dealer.name}
+                  {isHighest ? (
+                    <span className="ml-2 text-xs font-medium text-green-700">
+                      Highest
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-2 py-2">{formatCurrency(bid.amount)}</td>
+                <td className="px-2 py-2">{formatDateTime(bid.createdAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function fieldClassName(hasError: boolean) {
+  return hasError
+    ? "w-full rounded border border-red-500 px-3 py-2 focus:border-red-500 focus:outline-none"
+    : "w-full rounded border px-3 py-2 focus:border-blue-500 focus:outline-none";
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p
+      id={id}
+      className="mt-1 text-sm text-red-600"
+    >
+      {message}
+    </p>
+  );
+}
+
+export function AuctionDetailView({ auction }: AuctionDetailViewProps) {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPublishForm, setShowPublishForm] = useState(false);
+  function getInitialPublishForm() {
+    return {
+      startsAt: auction.startsAt ? toDatetimeLocalValue(auction.startsAt) : "",
+      endsAt: auction.endsAt ? toDatetimeLocalValue(auction.endsAt) : "",
+      reservePrice:
+        auction.reservePrice != null ? String(auction.reservePrice) : "",
+      minIncrement:
+        auction.minIncrement != null ? String(auction.minIncrement) : "",
+    };
+  }
+
+  const [publishForm, setPublishForm] = useState(getInitialPublishForm);
+  const [publishErrors, setPublishErrors] = useState<AuctionFormErrors>({});
+  const minStartDateTime = getMinDatetimeLocalValue();
+  const minEndDateTime = getMinEndDatetimeLocalValue(publishForm.startsAt);
+
+  function clearPublishFieldError(name: keyof typeof publishForm) {
+    setPublishErrors((current) => {
+      if (!(name in current) || !current[name as keyof AuctionFormErrors]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[name as keyof AuctionFormErrors];
+      return next;
+    });
+    setError("");
+  }
+
+  function handlePublishFieldChange(
+    name: keyof typeof publishForm,
+    value: string,
+  ) {
+    setPublishForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+    clearPublishFieldError(name);
+  }
+
+  const status = formatAuctionStatus(auction.status);
+  const shortId = auction.id.slice(0, 8);
+  const highestBid = getHighestBid(auction.bids);
+  const acceptError =
+    auction.status === "ENDED" && auction.outcome === "PENDING"
+      ? getAcceptOutcomeError(auction.reservePrice, auction.bids)
+      : null;
+
+  async function handleConfirmOutcome(outcome: "SOLD" | "UNSOLD") {
+    if (outcome === "SOLD") {
+      const validationError = getAcceptOutcomeError(
+        auction.reservePrice,
+        auction.bids,
+      );
+
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+    }
+
+    if (
+      !confirm(
+        outcome === "SOLD"
+          ? `Accept the highest bid of ${highestBid ? formatCurrency(highestBid.amount) : ""} and mark this auction as sold?`
+          : "Reject all bids and mark this auction as unsold?",
+      )
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    const result = await confirmAuctionOutcomeAction(auction.id, outcome);
+
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    router.refresh();
+  }
+
+  async function handleCancel() {
+    if (!confirm("Are you sure you want to cancel this auction?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    const result = await cancelAuctionAction(auction.id);
+
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    router.refresh();
+  }
+
+  async function handlePublish() {
+    setError("");
+
+    const validationErrors = validateAuctionForm(publishForm);
+
+    if (hasAuctionFormErrors(validationErrors)) {
+      setPublishErrors(validationErrors);
+      setError("Please fix the highlighted fields.");
+      return;
+    }
+
+    setPublishErrors({});
+    setIsSubmitting(true);
+
+    const result = await publishAuctionAction(auction.id, {
+      startsAt: publishForm.startsAt,
+      endsAt: publishForm.endsAt,
+      reservePrice: Number(publishForm.reservePrice),
+      minIncrement: Number(publishForm.minIncrement),
+    });
+
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    setShowPublishForm(false);
+    router.refresh();
+  }
+
+  function handleCancelPublish() {
+    setShowPublishForm(false);
+    setError("");
+    setPublishErrors({});
+    setPublishForm(getInitialPublishForm());
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6">
+        <Link
+          href="/admin/auctions"
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          ← Back to auctions
+        </Link>
+      </div>
+
+      <div>
+        <ImageCarousel
+          photos={auction.vehicle.photos}
+          title={`${auction.vehicle.make} ${auction.vehicle.model}`}
+        />
+      </div>
+
+      <div className="mb-8">
+        <p className="text-sm text-gray-500">Auction #{shortId}</p>
+        <h1 className="text-2xl font-bold">
+          {auction.vehicle.make} {auction.vehicle.model}
+        </h1>
+        <span
+          className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.badgeClassName}`}
+        >
+          {status.label}
+        </span>
+      </div>
+
+      <section className="mb-8 rounded-lg border bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold">Vehicle details</h2>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-gray-500">VIN</dt>
+            <dd className="font-medium">{auction.vehicle.vin}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Year</dt>
+            <dd className="font-medium">{auction.vehicle.year}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Mileage</dt>
+            <dd className="font-medium">
+              {formatNumber(auction.vehicle.mileage)} km
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Battery SoH</dt>
+            <dd className="font-medium">{auction.vehicle.batterySoH}%</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Location</dt>
+            <dd className="font-medium">
+              {auction.vehicle.city}, {auction.vehicle.country}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Condition</dt>
+            <dd className="font-medium">{auction.vehicle.condition}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="mb-8 rounded-lg border bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold">Auction details</h2>
+        <dl className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <dt className="text-gray-500">Status</dt>
+            <dd className="font-medium">{status.label}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500"></dt>
+          </div>
+          <div>
+            <dt className="text-gray-500">Start</dt>
+            <dd className="font-medium">
+              {auction.startsAt ? formatDateTime(auction.startsAt) : "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">End</dt>
+            <dd className="font-medium">
+              {auction.endsAt ? formatDateTime(auction.endsAt) : "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Reserve price</dt>
+            <dd className="font-medium">
+              {auction.reservePrice != null
+                ? formatCurrency(auction.reservePrice)
+                : "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Minimum increment</dt>
+            <dd className="font-medium">
+              {auction.minIncrement != null
+                ? formatCurrency(auction.minIncrement)
+                : "-"}
+            </dd>
+          </div>
+        </dl>
+
+        {auction.status === "DRAFT" && !showPublishForm && (
+          <button
+            type="button"
+            onClick={() => setShowPublishForm(true)}
+            disabled={isSubmitting}
+            className="mt-4 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Publish auction
+          </button>
+        )}
+
+        {showPublishForm && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="mb-3 text-sm font-medium">Publish auction</h3>
+            {error && (
+              <div
+                className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="publish-startsAt"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Start date/time
+                </label>
+                <input
+                  id="publish-startsAt"
+                  name="startsAt"
+                  type="datetime-local"
+                  value={publishForm.startsAt}
+                  min={minStartDateTime}
+                  onChange={(event) =>
+                    handlePublishFieldChange("startsAt", event.target.value)
+                  }
+                  className={fieldClassName(Boolean(publishErrors.startsAt))}
+                  aria-invalid={Boolean(publishErrors.startsAt)}
+                  aria-describedby={
+                    publishErrors.startsAt
+                      ? "publish-startsAt-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-startsAt-error"
+                  message={publishErrors.startsAt}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="publish-endsAt"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  End date/time
+                </label>
+                <input
+                  id="publish-endsAt"
+                  name="endsAt"
+                  type="datetime-local"
+                  value={publishForm.endsAt}
+                  min={minEndDateTime}
+                  onChange={(event) =>
+                    handlePublishFieldChange("endsAt", event.target.value)
+                  }
+                  className={fieldClassName(Boolean(publishErrors.endsAt))}
+                  aria-invalid={Boolean(publishErrors.endsAt)}
+                  aria-describedby={
+                    publishErrors.endsAt ? "publish-endsAt-error" : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-endsAt-error"
+                  message={publishErrors.endsAt}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="publish-reservePrice"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Reserve price (€)
+                </label>
+                <input
+                  id="publish-reservePrice"
+                  name="reservePrice"
+                  type="number"
+                  value={publishForm.reservePrice}
+                  onChange={(event) =>
+                    handlePublishFieldChange("reservePrice", event.target.value)
+                  }
+                  className={fieldClassName(
+                    Boolean(publishErrors.reservePrice),
+                  )}
+                  aria-invalid={Boolean(publishErrors.reservePrice)}
+                  aria-describedby={
+                    publishErrors.reservePrice
+                      ? "publish-reservePrice-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-reservePrice-error"
+                  message={publishErrors.reservePrice}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="publish-minIncrement"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Minimum increment (€)
+                </label>
+                <input
+                  id="publish-minIncrement"
+                  name="minIncrement"
+                  type="number"
+                  value={publishForm.minIncrement}
+                  onChange={(event) =>
+                    handlePublishFieldChange("minIncrement", event.target.value)
+                  }
+                  className={fieldClassName(
+                    Boolean(publishErrors.minIncrement),
+                  )}
+                  aria-invalid={Boolean(publishErrors.minIncrement)}
+                  aria-describedby={
+                    publishErrors.minIncrement
+                      ? "publish-minIncrement-error"
+                      : undefined
+                  }
+                />
+                <FieldError
+                  id="publish-minIncrement-error"
+                  message={publishErrors.minIncrement}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={isSubmitting}
+                className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                Confirm publish
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelPublish}
+                disabled={isSubmitting}
+                className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {(auction.status === "SCHEDULED" || auction.status === "LIVE") && (
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+            className="mt-4 rounded border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
+            Cancel auction
+          </button>
+        )}
+      </section>
+
+      <section className="mb-8 rounded-lg border bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold">Bids</h2>
+
+        {auction.bids.length === 0 ? (
+          <p className="text-sm text-gray-600">No bids yet.</p>
+        ) : (
+          <AuctionBidsTable
+            bids={auction.bids}
+            highestBidId={highestBid?.id}
+          />
+        )}
+
+        {auction.status === "ENDED" && auction.outcome === "PENDING" ? (
+          <div className="mt-4 border-t pt-4">
+            <p className="mb-3 text-sm text-gray-600">
+              This auction has ended and is awaiting your review.
+            </p>
+            {acceptError ? (
+              <p className="mb-3 text-sm text-amber-700">{acceptError}</p>
+            ) : null}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => handleConfirmOutcome("SOLD")}
+                disabled={isSubmitting || Boolean(acceptError)}
+                className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmOutcome("UNSOLD")}
+                disabled={isSubmitting}
+                className="rounded border border-red-300 px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="rounded-lg border bg-white p-6">
+        <h2 className="mb-4 text-lg font-semibold">Result</h2>
+
+        {auction.status === "ENDED" &&
+        auction.outcome === "SOLD" &&
+        auction.winningBid ? (
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt className="text-gray-500">Outcome</dt>
+              <dd className="font-medium">
+                {formatAuctionOutcome(auction.outcome)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Winner</dt>
+              <dd className="font-medium">{auction.winningBid.dealer.name}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Winning bid</dt>
+              <dd className="font-medium">
+                {formatCurrency(auction.winningBid.amount)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-gray-500">Seller payout</dt>
+              <dd className="font-medium">Pending</dd>
+            </div>
+          </dl>
+        ) : auction.status === "ENDED" && auction.outcome === "UNSOLD" ? (
+          <p className="text-sm text-gray-600">
+            Outcome: {formatAuctionOutcome(auction.outcome)}
+          </p>
+        ) : auction.status === "ENDED" && auction.outcome === "PENDING" ? (
+          <p className="text-sm text-gray-600">
+            Outcome: {formatAuctionOutcome(auction.outcome)}
+          </p>
+        ) : (
+          <p className="text-sm text-gray-600">No result yet.</p>
+        )}
+      </section>
+    </div>
+  );
+}

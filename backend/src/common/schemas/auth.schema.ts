@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { userRoleSchema } from './user.schema';
+import { userRoleSchema } from '../constants/user-role';
 
 export const loginSchema = z.object({
   email: z.email(),
@@ -11,6 +11,3 @@ export const jwtPayloadSchema = z.object({
   email: z.email(),
   role: userRoleSchema,
 });
-
-export type LoginDto = z.infer<typeof loginSchema>;
-export type JwtPayload = z.infer<typeof jwtPayloadSchema>;

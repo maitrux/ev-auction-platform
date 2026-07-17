@@ -15,7 +15,12 @@ export default async function AuthenticatedLayout({
 
   return (
     <>
-      <AppBar userName={user.name} />
+      <AppBar
+        user={{
+          name: user.name,
+          role: user.role,
+        }}
+      />
       {children}
     </>
   );
