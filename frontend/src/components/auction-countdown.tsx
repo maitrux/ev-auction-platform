@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { formatDateTime } from "@/lib/format";
 import type { AuctionStatus } from "@/types/auction";
@@ -12,17 +12,17 @@ interface AuctionCountdownProps {
   onExpire?: () => void;
 }
 
-function getTargetDate(
+function getTargetTimestamp(
   status: AuctionStatus,
   startsAt: string | null,
   endsAt: string | null,
-): Date | null {
+): number | null {
   if (status === "LIVE" && endsAt) {
-    return new Date(endsAt);
+    return new Date(endsAt).getTime();
   }
 
   if (status === "SCHEDULED" && startsAt) {
-    return new Date(startsAt);
+    return new Date(startsAt).getTime();
   }
 
   return null;
@@ -75,20 +75,27 @@ export function AuctionCountdown({
   endsAt,
   onExpire,
 }: AuctionCountdownProps) {
-  const targetDate = getTargetDate(status, startsAt, endsAt);
+  const targetTimestamp = getTargetTimestamp(status, startsAt, endsAt);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
+  const onExpireRef = useRef(onExpire);
+  const hasExpiredRef = useRef(false);
+
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
-    if (!targetDate) {
+    if (targetTimestamp == null) {
       return;
     }
 
+    hasExpiredRef.current = false;
+
     const updateRemaining = () => {
-      const nextRemaining = targetDate.getTime() - Date.now();
+      const nextRemaining = targetTimestamp - Date.now();
       setRemainingMs(nextRemaining);
 
-      if (nextRemaining <= 0) {
-        onExpire?.();
+      if (nextRemaining <= 0 && !hasExpiredRef.current) {
+        hasExpiredRef.current = true;
+        onExpireRef.current?.();
       }
     };
 
@@ -98,14 +105,14 @@ export function AuctionCountdown({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [onExpire, targetDate]);
+  }, [targetTimestamp]);
 
-  if (!targetDate) {
+  if (targetTimestamp == null) {
     return null;
   }
 
   const prefix = status === "LIVE" ? "Ends in" : "Starts in";
-  const formattedDate = formatDateTime(targetDate);
+  const formattedDate = formatDateTime(new Date(targetTimestamp));
 
   if (remainingMs === null) {
     return (

@@ -1,4 +1,4 @@
-import { AuctionOutcome, AuctionStatus } from "@/types";
+import { AuctionOutcome, AuctionStatus, VehicleCondition } from "@/types";
 
 const LOCALE = "en-GB";
 
@@ -77,6 +77,17 @@ export function formatAuctionOutcome(outcome: AuctionOutcome): {
     label: outcomeLabels[outcome],
     badgeClassName: outcomeBadgeClasses[outcome],
   };
+}
+
+const vehicleConditionLabels: Record<VehicleCondition, string> = {
+  EXCELLENT: "Excellent",
+  GOOD: "Good",
+  FAIR: "Fair",
+  POOR: "Poor",
+};
+
+export function formatVehicleCondition(condition: VehicleCondition): string {
+  return vehicleConditionLabels[condition];
 }
 export function toDatetimeLocalValue(date: string | Date): string {
   const value = new Date(date);

@@ -1,5 +1,10 @@
 import type { DealerAuctionOutcome } from "./dealer-auction-outcome";
-import type { CreateVehicleInput, Vehicle, VehicleFormState } from "./vehicle";
+import type {
+  CreateVehicleInput,
+  Vehicle,
+  VehicleCondition,
+  VehicleFormState,
+} from "./vehicle";
 import { toCreateVehicleInput } from "./vehicle";
 
 export type AuctionStatus =
@@ -40,6 +45,11 @@ export interface DealerAuctionListItem {
     city: string;
     country: string;
     mileage: number;
+    condition: VehicleCondition;
+    batterySoH: number;
+    rangeKm: number;
+    batteryCapacityKwh: number;
+    registrationDate: string;
   };
 }
 

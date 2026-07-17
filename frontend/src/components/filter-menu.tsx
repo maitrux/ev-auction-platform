@@ -17,6 +17,7 @@ interface FilterMenuGroupProps<T extends string> {
 interface FilterMenuProps {
   activeCount: number;
   onClearAll?: () => void;
+  panelClassName?: string;
   children: React.ReactNode;
 }
 
@@ -70,6 +71,7 @@ export function FilterMenuGroup<T extends string>({
 export function FilterMenu({
   activeCount,
   onClearAll,
+  panelClassName,
   children,
 }: FilterMenuProps) {
   const [open, setOpen] = useState(false);
@@ -126,7 +128,12 @@ export function FilterMenu({
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
+        <div
+          className={
+            panelClassName ??
+            "absolute right-0 z-20 mt-2 w-64 rounded-lg border border-gray-200 bg-white p-4 shadow-lg"
+          }
+        >
           <div className="space-y-4">{children}</div>
           {activeCount > 0 && onClearAll ? (
             <button
