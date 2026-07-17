@@ -82,8 +82,6 @@ Open `http://localhost:3000` and sign in using one of the seeded accounts.
 
 # Running tests
 
-Tests are located in the backend.
-
 ```bash
 cd backend
 npm test
