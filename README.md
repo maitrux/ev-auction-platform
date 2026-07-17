@@ -105,7 +105,7 @@ Authentication endpoints are intentionally excluded because authentication relie
 
 The application keeps admin and dealer concerns in separate areas in both frontend and backend.
 
-- **Frontend routes:** `/admin/`* for administrators, `/dealer/*` for dealers. Each role has its own pages, navigation, and server-side API clients.
+- **Frontend routes:** `/admin/*` for administrators, `/dealer/*` for dealers. Each role has its own pages, navigation, and server-side API clients.
 - **Backend API:** Endpoints are guarded by role. This keeps the codebase easier to maintain and reduces complexity. If an administrator needs to experience the application from a dealer's perspective, a separate dealer test account should be used.
 
 ## Auction status
