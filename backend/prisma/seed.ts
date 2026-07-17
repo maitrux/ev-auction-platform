@@ -395,7 +395,7 @@ async function createBids(
     data: { winningBidId: winningBid.id },
   });
 
-  // CANCELED auction
+  // Canceled auction
   await prisma.bid.create({
     data: {
       auctionId: auctions.canceledAuction.id,

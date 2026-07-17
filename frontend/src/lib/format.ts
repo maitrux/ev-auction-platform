@@ -36,7 +36,7 @@ const statusLabels: Record<AuctionStatus, string> = {
   SCHEDULED: "Scheduled",
   LIVE: "Live",
   ENDED: "Ended",
-  CANCELED: "CANCELED",
+  CANCELED: "Canceled",
 };
 
 const statusBadgeClasses: Record<AuctionStatus, string> = {
