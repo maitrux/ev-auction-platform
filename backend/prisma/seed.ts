@@ -214,7 +214,7 @@ const VEHICLE_SEEDS: VehicleSeed[] = [
     condition: 'EXCELLENT',
     photos: [
       'https://images.pexels.com/photos/34698047/pexels-photo-34698047.jpeg',
-      'https://images.pexels.com/photos/34698047/pexels-photo-34698047.jpeg',
+      'https://images.pexels.com/photos/18978491/pexels-photo-18978491.jpeg',
     ],
     city: 'Strasbourg',
     country: 'France',
@@ -250,7 +250,7 @@ const VEHICLE_SEEDS: VehicleSeed[] = [
     registrationDate: '2021-11-05',
     condition: 'GOOD',
     photos: [
-      'https://images.pexels.com/photos/33621570/pexels-photo-33621570.jpeg',
+      'https://images.pexels.com/photos/9799995/pexels-photo-9799995.jpeg',
     ],
     city: 'Salzburg',
     country: 'Austria',
