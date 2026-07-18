@@ -79,12 +79,12 @@ export function validateVehicleForm(form: VehicleFormState): VehicleFormErrors {
     errors.year = "Year cannot be in the future";
   }
 
-  const mileage = parseRequiredInt(form.mileage, "Mileage");
+  const mileageKm = parseRequiredInt(form.mileageKm, "Mileage");
 
-  if (mileage.error) {
-    errors.mileage = mileage.error;
-  } else if (mileage.value! < 0) {
-    errors.mileage = "Mileage must be 0 or greater";
+  if (mileageKm.error) {
+    errors.mileageKm = mileageKm.error;
+  } else if (mileageKm.value! < 0) {
+    errors.mileageKm = "Mileage must be 0 or greater";
   }
 
   const batteryCapacityKwh = parseRequiredNumber(
@@ -168,7 +168,7 @@ const backendFieldMessages: Record<string, string> = {
   make: "Make is required",
   model: "Model is required",
   year: "Year must be 1886 or later and cannot be in the future",
-  mileage: "Mileage must be 0 or greater",
+  mileageKm: "Mileage must be 0 or greater",
   batteryCapacityKwh: "Battery capacity must be greater than 0",
   batterySoH: "Battery SoH must be between 0 and 100",
   rangeKm: "Range must be greater than 0",

@@ -10,14 +10,14 @@ export type DealerAuctionSortKey =
   | "startsAt"
   | "endsAt"
   | "year"
-  | "mileage"
+  | "mileageKm"
   | "make"
   | "myBid";
 
 export type DealerAuctionRangeFilters = {
   yearMin: string;
   yearMax: string;
-  mileageMax: string;
+  mileageKmMax: string;
   startsFrom: string;
   startsTo: string;
 };
@@ -25,7 +25,7 @@ export type DealerAuctionRangeFilters = {
 export const EMPTY_DEALER_AUCTION_RANGE_FILTERS: DealerAuctionRangeFilters = {
   yearMin: "",
   yearMax: "",
-  mileageMax: "",
+  mileageKmMax: "",
   startsFrom: "",
   startsTo: "",
 };
@@ -97,7 +97,7 @@ export function matchesDealerAuctionRangeFilters(
 ): boolean {
   const yearMin = parseOptionalNumber(filters.yearMin);
   const yearMax = parseOptionalNumber(filters.yearMax);
-  const mileageMax = parseOptionalNumber(filters.mileageMax);
+  const mileageKmMax = parseOptionalNumber(filters.mileageKmMax);
   const startsFrom = parseOptionalDate(filters.startsFrom);
   const startsTo = parseOptionalDate(filters.startsTo);
 
@@ -109,7 +109,7 @@ export function matchesDealerAuctionRangeFilters(
     return false;
   }
 
-  if (mileageMax != null && auction.vehicle.mileage > mileageMax) {
+  if (mileageKmMax != null && auction.vehicle.mileageKm > mileageKmMax) {
     return false;
   }
 
@@ -188,8 +188,8 @@ function getDealerAuctionSortValue(
       return auction.endsAt ? new Date(auction.endsAt).getTime() : null;
     case "year":
       return auction.vehicle.year;
-    case "mileage":
-      return auction.vehicle.mileage;
+    case "mileageKm":
+      return auction.vehicle.mileageKm;
     case "make":
       return `${auction.vehicle.make} ${auction.vehicle.model}`;
     case "myBid":

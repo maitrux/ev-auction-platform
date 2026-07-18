@@ -6,7 +6,7 @@ export interface Vehicle {
   make: string;
   model: string;
   year: number;
-  mileage: number;
+  mileageKm: number;
 
   batteryCapacityKwh: number;
   batterySoH: number;
@@ -31,7 +31,7 @@ export interface CreateVehicleInput {
   make: string;
   model: string;
   year: number;
-  mileage: number;
+  mileageKm: number;
   batteryCapacityKwh: number;
   batterySoH: number;
   rangeKm: number;
@@ -48,7 +48,7 @@ export type VehicleFormState = {
   make: string;
   model: string;
   year: string;
-  mileage: string;
+  mileageKm: string;
   batteryCapacityKwh: string;
   batterySoH: string;
   rangeKm: string;
@@ -68,7 +68,7 @@ export function toCreateVehicleInput(
     make: form.make,
     model: form.model,
     year: Number(form.year),
-    mileage: Number(form.mileage),
+    mileageKm: Number(form.mileageKm),
     batteryCapacityKwh: Number(form.batteryCapacityKwh),
     batterySoH: Number(form.batterySoH),
     rangeKm: Number(form.rangeKm),

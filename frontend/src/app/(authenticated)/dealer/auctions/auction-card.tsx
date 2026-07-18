@@ -82,7 +82,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             {auction.vehicle.city}, {auction.vehicle.country}
           </p>
           <p className="text-sm text-gray-600">
-            {formatNumber(auction.vehicle.mileage)} km
+            {formatNumber(auction.vehicle.mileageKm)} km
           </p>
           <span
             className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${condition.badgeClassName}`}

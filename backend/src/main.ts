@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
@@ -20,7 +21,9 @@ async function bootstrap() {
     .addCookieAuth('access_token')
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = cleanupOpenApiDoc(
+    SwaggerModule.createDocument(app, swaggerConfig),
+  );
   SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
       defaultModelsExpandDepth: -1,

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
+  ApiBody,
   ApiCookieAuth,
   ApiOperation,
   ApiResponse,
@@ -8,6 +9,8 @@ import {
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRole } from 'src/common/constants/user-role';
+import { CreateBidDto } from 'src/common/dtos/create-bid.dto';
+import { createBidExample } from 'src/common/openapi/request-body-examples';
 import {
   createBidSchema,
   type CreateBidInput,
@@ -35,6 +38,16 @@ export class BidsController {
 
   @Post()
   @ApiOperation({ summary: 'Place a bid on an auction' })
+  @ApiBody({
+    type: CreateBidDto,
+    examples: {
+      default: {
+        summary: 'Place a bid',
+        description: 'Replace auctionId with an open auction ID from GET /auctions/open.',
+        value: createBidExample,
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Bid created' })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   create(

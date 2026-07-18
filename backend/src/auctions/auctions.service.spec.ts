@@ -60,7 +60,7 @@ describe('AuctionsService', () => {
           photos: [],
           city: 'Munich',
           country: 'Germany',
-          mileage: 25000,
+          mileageKm: 25000,
         },
         bids: [],
         ...overrides,
@@ -143,7 +143,7 @@ describe('AuctionsService', () => {
         photos: [],
         city: 'Munich',
         country: 'Germany',
-        mileage: 25000,
+        mileageKm: 25000,
       });
       expect(auction.myBid).toBeNull();
       expect(auction).not.toHaveProperty('highestBid');
@@ -182,7 +182,7 @@ describe('AuctionsService', () => {
           make: 'Tesla',
           model: 'Model 3',
           year: 2022,
-          mileage: 25000,
+          mileageKm: 25000,
           batteryCapacityKwh: 75,
           batterySoH: 94,
           rangeKm: 500,
@@ -283,7 +283,7 @@ describe('AuctionsService', () => {
           make: 'Renault',
           model: 'Zoe',
           year: 2021,
-          mileage: 30000,
+          mileageKm: 30000,
           batteryCapacityKwh: 52,
           batterySoH: 92,
           rangeKm: 300,

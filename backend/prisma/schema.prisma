@@ -28,7 +28,7 @@ model Vehicle {
   make                  String
   model                 String
   year                  Int
-  mileage               Int
+  mileageKm               Int
   batteryCapacityKwh    Float
   batterySoH            Float
   rangeKm               Int

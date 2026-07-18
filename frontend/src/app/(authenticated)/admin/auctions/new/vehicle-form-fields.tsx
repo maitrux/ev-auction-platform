@@ -220,11 +220,11 @@ export function VehicleFormFields({
 
         <Input
           label="Mileage (km)"
-          name="mileage"
+          name="mileageKm"
           type="number"
-          value={form.mileage}
+          value={form.mileageKm}
           onChange={onChange}
-          error={fieldErrors.mileage}
+          error={fieldErrors.mileageKm}
         />
 
         <Input

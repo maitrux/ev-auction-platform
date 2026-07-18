@@ -31,7 +31,7 @@ const initialVehicleForm: VehicleFormState = {
   make: "",
   model: "",
   year: "",
-  mileage: "",
+  mileageKm: "",
   batteryCapacityKwh: "",
   batterySoH: "",
   rangeKm: "",

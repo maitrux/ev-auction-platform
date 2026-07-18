@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiCookieAuth,
   ApiForbiddenResponse,
   ApiOperation,
@@ -17,6 +18,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { CreateAuctionWithVehicleDto } from 'src/common/dtos/create-auction-with-vehicle.dto';
+import { UpdateAuctionDto } from 'src/common/dtos/update-auction.dto';
+import {
+  createAuctionWithVehicleExample,
+  updateAuctionCancelExample,
+  updateAuctionPublishExample,
+} from 'src/common/openapi/request-body-examples';
 import {
   createAuctionWithVehicleSchema,
   type CreateAuctionWithVehicleInput,
@@ -75,6 +83,15 @@ export class AuctionsController {
   @Post('with-vehicle')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create an auction with a vehicle (admin)' })
+  @ApiBody({
+    type: CreateAuctionWithVehicleDto,
+    examples: {
+      default: {
+        summary: 'Create auction with vehicle',
+        value: createAuctionWithVehicleExample,
+      },
+    },
+  })
   @ApiResponse({ status: 201, description: 'Auction created' })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   createWithVehicle(
@@ -98,6 +115,19 @@ export class AuctionsController {
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update an auction (admin)' })
   @ApiParam({ name: 'id', type: String })
+  @ApiBody({
+    type: UpdateAuctionDto,
+    examples: {
+      publish: {
+        summary: 'Publish a draft auction',
+        value: updateAuctionPublishExample,
+      },
+      cancel: {
+        summary: 'Cancel an auction',
+        value: updateAuctionCancelExample,
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Auction updated' })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   @ApiResponse({ status: 404, description: 'Auction not found' })

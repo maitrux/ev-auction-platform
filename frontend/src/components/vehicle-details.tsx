@@ -5,7 +5,7 @@ type VehicleDetailsVehicle = Pick<
   Vehicle,
   | "vin"
   | "year"
-  | "mileage"
+  | "mileageKm"
   | "batteryCapacityKwh"
   | "batterySoH"
   | "rangeKm"
@@ -39,7 +39,7 @@ export function VehicleDetails({
         </div>
         <div>
           <dt className="text-gray-500">Mileage (km)</dt>
-          <dd className="font-medium">{formatNumber(vehicle.mileage)} km</dd>
+          <dd className="font-medium">{formatNumber(vehicle.mileageKm)} km</dd>
         </div>
         <div>
           <dt className="text-gray-500">Battery capacity (kWh)</dt>

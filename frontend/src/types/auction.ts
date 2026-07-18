@@ -44,7 +44,7 @@ export interface DealerAuctionListItem {
     photos: string[];
     city: string;
     country: string;
-    mileage: number;
+    mileageKm: number;
     condition: VehicleCondition;
     batterySoH: number;
     rangeKm: number;

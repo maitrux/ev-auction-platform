@@ -10,7 +10,7 @@ export function getDealerAuctionListInclude(dealerId: string) {
         photos: true,
         city: true,
         country: true,
-        mileage: true,
+        mileageKm: true,
         condition: true,
         batterySoH: true,
         rangeKm: true,

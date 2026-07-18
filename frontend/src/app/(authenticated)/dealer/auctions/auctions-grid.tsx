@@ -64,8 +64,8 @@ const SORT_OPTIONS: {
   { value: "endsAt:desc", label: "End date (latest)" },
   { value: "year:desc", label: "Year (newest)" },
   { value: "year:asc", label: "Year (oldest)" },
-  { value: "mileage:asc", label: "Mileage (lowest)" },
-  { value: "mileage:desc", label: "Mileage (highest)" },
+  { value: "mileageKm:asc", label: "Mileage (lowest)" },
+  { value: "mileageKm:desc", label: "Mileage (highest)" },
   { value: "make:asc", label: "Brand (A–Z)" },
   { value: "make:desc", label: "Brand (Z–A)" },
   { value: "myBid:desc", label: "My bid (highest)" },
@@ -360,9 +360,9 @@ export function AuctionsGrid({ auctions }: AuctionsGridProps) {
               </legend>
               <FilterRangeField
                 label="Max mileage (km)"
-                id="filter-mileage-max"
-                value={rangeFilters.mileageMax}
-                onChange={(value) => updateRangeFilter("mileageMax", value)}
+                id="filter-mileage-km-max"
+                value={rangeFilters.mileageKmMax}
+                onChange={(value) => updateRangeFilter("mileageKmMax", value)}
                 min={0}
               />
             </fieldset>
