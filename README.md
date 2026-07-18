@@ -141,6 +141,10 @@ Dealers see a simplified outcome model:
 | `PENDING`  | Auction has ended; final result not yet available to dealers.                                             |
 | `RESOLVED` | Admin has made a decision (sold or unsold). Dealers are not shown whether the auction was sold or unsold. |
 
+## Dealer auction filtering
+
+The dealer auctions page filters and sorts listings entirely on the frontend. `GET /auctions/open` returns all open auctions (`LIVE` and `SCHEDULED`); filter state is applied in the browser. This works fine for a modest number of auctions, but if the list grows large you'd likely want server-side filtering and pagination with query params on `GET /auctions/open`.
+
 ## Canceled auctions
 
 An admin can cancel an auction while it is `DRAFT`, `SCHEDULED`, or `LIVE`. Canceled auctions cannot be reopened. Allowing reopening would be complicated once dealers have already placed bids.
