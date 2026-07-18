@@ -1,8 +1,5 @@
 import { AuctionCountdown } from "@/components/auction-countdown";
-import {
-  ImageUnavailableIcon,
-  LoadingImage,
-} from "@/components/loading-image";
+import { ImageUnavailableIcon, LoadingImage } from "@/components/loading-image";
 import {
   DealerAuctionFrom,
   getDealerAuctionDetailHref,
@@ -11,6 +8,7 @@ import {
   formatAuctionStatus,
   formatCurrency,
   formatNumber,
+  formatVehicleCondition,
 } from "@/lib/format";
 import type { DealerAuctionListItem } from "@/types/auction";
 import Link from "next/link";
@@ -43,7 +41,8 @@ function VehicleImage({ photos, title }: { photos: string[]; title: string }) {
 
 export function AuctionCard({ auction }: AuctionCardProps) {
   const status = formatAuctionStatus(auction.status);
-  const title = `${auction.vehicle.year} ${auction.vehicle.make} ${auction.vehicle.model}`;
+  const condition = formatVehicleCondition(auction.vehicle.condition);
+  const title = `${auction.vehicle.make} ${auction.vehicle.model} (${auction.vehicle.year})`;
   return (
     <Link
       href={getDealerAuctionDetailHref(auction.id, DealerAuctionFrom.AUCTIONS)}
@@ -54,6 +53,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           photos={auction.vehicle.photos}
           title={title}
         />
+        {auction.myBid != null ? (
+          <div className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm">
+            <p className="text-[10px] leading-tight text-gray-500">My bid</p>
+            <p className="text-sm font-semibold leading-tight text-gray-900">
+              {formatCurrency(auction.myBid)}
+            </p>
+          </div>
+        ) : null}
         <span
           className={`absolute right-3 top-3 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${status.badgeClassName}`}
         >
@@ -77,20 +84,14 @@ export function AuctionCard({ auction }: AuctionCardProps) {
           <p className="text-sm text-gray-600">
             {formatNumber(auction.vehicle.mileage)} km
           </p>
+          <span
+            className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${condition.badgeClassName}`}
+          >
+            {condition.label}
+          </span>
         </div>
 
-        <div className="mt-auto space-y-3">
-          <div className="min-h-14">
-            {auction.myBid != null ? (
-              <div className="rounded-lg bg-gray-100 px-3 py-2">
-                <p className="text-xs text-gray-600">My bid</p>
-                <p className="font-semibold text-gray-900">
-                  {formatCurrency(auction.myBid)}
-                </p>
-              </div>
-            ) : null}
-          </div>
-
+        <div className="mt-auto">
           <AuctionCountdown
             status={auction.status}
             startsAt={auction.startsAt}

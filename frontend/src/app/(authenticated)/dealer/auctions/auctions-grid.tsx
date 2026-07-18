@@ -42,7 +42,7 @@ const STATUS_FILTER_OPTIONS: FilterOption<AuctionStatus>[] =
 const CONDITION_FILTER_OPTIONS: FilterOption<VehicleCondition>[] =
   VEHICLE_CONDITIONS.map((condition) => ({
     value: condition,
-    label: formatVehicleCondition(condition),
+    label: formatVehicleCondition(condition).label,
   }));
 
 const MY_BID_FILTER_OPTIONS: {

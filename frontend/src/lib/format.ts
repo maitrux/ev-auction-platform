@@ -86,8 +86,21 @@ const vehicleConditionLabels: Record<VehicleCondition, string> = {
   POOR: "Poor",
 };
 
-export function formatVehicleCondition(condition: VehicleCondition): string {
-  return vehicleConditionLabels[condition];
+const vehicleConditionBadgeClasses: Record<VehicleCondition, string> = {
+  EXCELLENT: "bg-green-100 text-green-800",
+  GOOD: "bg-blue-100 text-blue-700",
+  FAIR: "bg-yellow-100 text-yellow-700",
+  POOR: "bg-red-100 text-red-700",
+};
+
+export function formatVehicleCondition(condition: VehicleCondition): {
+  label: string;
+  badgeClassName: string;
+} {
+  return {
+    label: vehicleConditionLabels[condition],
+    badgeClassName: vehicleConditionBadgeClasses[condition],
+  };
 }
 export function toDatetimeLocalValue(date: string | Date): string {
   const value = new Date(date);
