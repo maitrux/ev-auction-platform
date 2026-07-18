@@ -385,7 +385,7 @@ export class AuctionsService {
 
     const minNextBid =
       effectiveStatus === AuctionStatus.LIVE
-        ? getMinNextBid(auction.bids, auction.minIncrement)
+        ? getMinNextBid(auction.bids, auction.minIncrement, dealerId)
         : null;
 
     const outcome = getDealerAuctionOutcome(effectiveStatus, auction.result);

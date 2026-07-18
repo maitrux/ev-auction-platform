@@ -213,6 +213,48 @@ describe('AuctionsService', () => {
       };
     }
 
+    it('returns minNextBid as minIncrement when the dealer has not bid yet', async () => {
+      const auction = buildDealerDetailAuction({
+        bids: [
+          {
+            id: 'bid-1',
+            amount: 27250,
+            createdAt: daysFromNow(-5),
+            dealerId: 'dealer-2',
+          },
+        ],
+      });
+      prisma.auction.findUnique.mockResolvedValue(auction);
+
+      const result = await service.findOneForDealer('auction-1', 'dealer-1');
+
+      expect(result.minNextBid).toBe(250);
+    });
+
+    it('returns minNextBid based on the dealer own highest bid', async () => {
+      const auction = buildDealerDetailAuction({
+        bids: [
+          {
+            id: 'bid-1',
+            amount: 26900,
+            createdAt: daysFromNow(-5),
+            dealerId: 'dealer-1',
+          },
+          {
+            id: 'bid-2',
+            amount: 27250,
+            createdAt: daysFromNow(-6),
+            dealerId: 'dealer-2',
+          },
+        ],
+      });
+      prisma.auction.findUnique.mockResolvedValue(auction);
+
+      const result = await service.findOneForDealer('auction-1', 'dealer-1');
+
+      expect(result.minNextBid).toBe(27150);
+    });
+
     it('returns dealer-safe auction detail with my bids and minNextBid', async () => {
       const auction = buildDealerDetailAuction();
       prisma.auction.findUnique.mockResolvedValue(auction);

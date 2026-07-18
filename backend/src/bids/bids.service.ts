@@ -78,6 +78,7 @@ export class BidsService {
           select: {
             amount: true,
             createdAt: true,
+            dealerId: true,
           },
         },
       },
@@ -97,6 +98,7 @@ export class BidsService {
       input.amount,
       auction.bids,
       auction.minIncrement,
+      dealerId,
     );
 
     if (amountError) {

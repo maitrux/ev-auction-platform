@@ -52,6 +52,7 @@ describe('BidsService', () => {
           {
             amount: 27250,
             createdAt: daysFromNow(-2),
+            dealerId: 'dealer-2',
           },
         ],
         ...overrides,
@@ -62,23 +63,23 @@ describe('BidsService', () => {
       prisma.auction.findUnique.mockResolvedValue(buildLiveAuction());
       prisma.bid.create.mockResolvedValue({
         id: 'bid-1',
-        amount: 27500,
+        amount: 250,
         createdAt: daysFromNow(0),
       });
 
       const result = await service.create('dealer-1', {
         auctionId: 'auction-1',
-        amount: 27500,
+        amount: 250,
       });
 
       expect(prisma.bid.create).toHaveBeenCalledWith({
         data: {
           auctionId: 'auction-1',
           dealerId: 'dealer-1',
-          amount: 27500,
+          amount: 250,
         },
       });
-      expect(result.amount).toBe(27500);
+      expect(result.amount).toBe(250);
     });
 
     it('rejects bids below the minimum increment', async () => {
@@ -87,9 +88,40 @@ describe('BidsService', () => {
       await expect(
         service.create('dealer-1', {
           auctionId: 'auction-1',
-          amount: 27400,
+          amount: 200,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('allows a dealer to raise their bid from their own highest bid', async () => {
+      prisma.auction.findUnique.mockResolvedValue(
+        buildLiveAuction({
+          bids: [
+            {
+              amount: 26900,
+              createdAt: daysFromNow(-3),
+              dealerId: 'dealer-1',
+            },
+            {
+              amount: 27250,
+              createdAt: daysFromNow(-2),
+              dealerId: 'dealer-2',
+            },
+          ],
+        }),
+      );
+      prisma.bid.create.mockResolvedValue({
+        id: 'bid-2',
+        amount: 27150,
+        createdAt: daysFromNow(0),
+      });
+
+      const result = await service.create('dealer-1', {
+        auctionId: 'auction-1',
+        amount: 27150,
+      });
+
+      expect(result.amount).toBe(27150);
     });
 
     it('rejects bids on non-live auctions', async () => {
